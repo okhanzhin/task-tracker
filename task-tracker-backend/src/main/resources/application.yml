@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: task-tracker-backend
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info
+  profiles:
+    active: default
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/tasks_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      schema: tasks-db
+  liquibase:
+    enabled: true
+    default-schema: ${spring.datasource.hikari.schema}
+    liquibase-schema: tasks-liquibase
+    change-log: classpath:/db/changelog/db.changelog-master.yaml

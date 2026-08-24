@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-tasks-schema
+      author: okhanzhin
+      changes:
+        - sqlFile:
+            comment: create tasks schema
+            path: db/changelog/sql/001-create-tasks-schema.sql
+      rollback:
+        - sqlFile:
+            comment: drop tasks schema
+            path: db/changelog/sql/001-drop-tasks-schema.sql
