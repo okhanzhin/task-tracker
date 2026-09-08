@@ -3,14 +3,16 @@ services:
         image: postgres:16.4
         container_name: postgresql
         ports:
-        - '5433:5432'
+        - '5432:5432'
         restart: always
         environment:
           POSTGRES_USER: ${PG_USERNAME}
           POSTGRES_PASSWORD: ${PG_PASSWORD}
           POSTGRES_DB: tasks-db
+          LIQUIBASE_SCHEMA: ${LIQUIBASE_SCHEMA:-tasks_liquibase}
         volumes:
         - postgres_db:/var/lib/postgresql/data
+        - ./postgres/init/01-create-liquibase-schema.sql:/docker-entrypoint-initdb.d/01-create-liquibase-schema.sql:ro
         healthcheck:
           test: [ "CMD-SHELL", "pg_isready -U ${PG_USERNAME}" ]
           interval: 20s
@@ -49,6 +51,27 @@ services:
           KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092
           KAFKA_TOPIC: EMAIL_SENDING_TASKS
           ALLOW_PLAINTEXT_LISTENER: yes
+        networks:
+        - task-tracker
+
+    task-tracker-backend:
+        build:
+          context: .
+          dockerfile: task-tracker-backend/Dockerfile
+        container_name: task-tracker-backend
+        restart: on-failure
+        ports:
+        - '8080:8080'
+        environment:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/${POSTGRES_DB}
+          SPRING_DATASOURCE_USERNAME: ${PG_USERNAME}
+          SPRING_DATASOURCE_PASSWORD: ${PG_PASSWORD}
+          SPRING_LIQUIBASE_LIQUIBASE_SCHEMA: ${LIQUIBASE_SCHEMA:-tasks_liquibase}
+          JWT_SECRET: ${JWT_SECRET}
+          JWT_EXPIRATION: ${JWT_EXPIRATION}
+        depends_on:
+          postgresql:
+            condition: service_healthy
         networks:
         - task-tracker
 

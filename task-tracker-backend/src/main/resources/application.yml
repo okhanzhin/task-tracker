@@ -1,3 +1,6 @@
+server:
+  port: ${APP_PORT:8080}
+
 spring:
   application:
     name: task-tracker-backend
@@ -9,7 +12,7 @@ spring:
   profiles:
     active: default
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/tasks_db}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/${POSTGRES_DB:tasks-db}}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
     password: ${SPRING_DATASOURCE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
@@ -19,9 +22,19 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
-      schema: tasks-db
+      schema: ${APP_SCHEMA:task_tracker}
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        default_schema: ${APP_SCHEMA:task_tracker}
+        ddl-auto: validate
+        dialect: org.hibernate.dialect.PostgreSQLDialect
   liquibase:
     enabled: true
     default-schema: ${spring.datasource.hikari.schema}
-    liquibase-schema: tasks-liquibase
+    liquibase-schema: ${SPRING_LIQUIBASE_LIQUIBASE_SCHEMA:tasks_liquibase}
     change-log: classpath:/db/changelog/db.changelog-master.yaml
+jwt:
+  secret: ${JWT_SECRET:K7q7NnSAx5ogW6MM0G0YvYsw7WXvYDY12E5tTBaVyX8=}
+  lifetime: ${JWT_EXPIRATION:PT1H}
