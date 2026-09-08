@@ -4,7 +4,9 @@ import com.okhanzhin.task.tracker.backend.annotation.PasswordMatches;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Запрос на регистрацию нового пользователя
@@ -12,6 +14,8 @@ import lombok.Data;
  * @author okhanzhin on 30.08.2026
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @PasswordMatches
 public class RegisterRequest {
 
