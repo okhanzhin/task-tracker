@@ -1,0 +1,1 @@
+DROP SCHEMA IF EXISTS tasks_tracker CASCADE;

@@ -1,0 +1,10 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  liquibase:
+    enabled: true
+
+jwt:
+  secret: K7q7NnSAx5ogW6MM0G0YvYsw7WXvYDY12E5tTBaVyX8=
+  lifetime: PT1H
