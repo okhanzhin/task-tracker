@@ -8,6 +8,7 @@ package com.okhanzhin.task.tracker.backend.exception.error;
 public enum ErrorMessage {
 
     USER_NOT_FOUND ("User not found"),
+    TASK_NOT_FOUND ("Task not found"),
     EMAIL_ALREADY_REGISTERED("This email is already registered"),
     VALIDATION_FAILED("Validation failed"),
     INVALID_CREDENTIAL("Invalid email or password"),

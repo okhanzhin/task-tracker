@@ -24,3 +24,10 @@ databaseChangeLog:
         - sqlFile:
             comment: add users timezone column
             path: db/changelog/sql/003-add-users-timezone-column.sql
+  - changeSet:
+      id: 004-create-tasks-table
+      author: okhanzhin
+      changes:
+        - sqlFile:
+            comment: create tasks table
+            path: db/changelog/sql/004-create-tasks-table.sql

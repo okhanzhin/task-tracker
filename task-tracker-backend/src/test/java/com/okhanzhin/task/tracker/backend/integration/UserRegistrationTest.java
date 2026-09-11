@@ -6,6 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.EMAIL;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.GET_USER_URL;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.PASSWORD;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.REGISTER_URL;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.TIMEZONE;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.USERNAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,14 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author okhanzhin on 08.09.2026
  */
 public class UserRegistrationTest extends IntegrationTest {
-
-    private static final String REGISTER_URL = "/api/v1/auth/register";
-    private static final String GET_USER_URL = "/api/v1/users";
-
-    private static final String USERNAME = "user user";
-    private static final String EMAIL = "new.user@example.com";
-    private static final String PASSWORD = "password12345";
-    private static final String TIMEZONE = "Europe/Moscow";
 
     @Test
     void shouldRegisterUserAndReturnJwt() throws Exception {
