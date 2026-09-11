@@ -21,11 +21,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthenticationTest extends IntegrationTest {
 
     private static final String LOGIN_URL = "/api/v1/auth/login";
-    private static final String GET_USER_URL = "/api/v1/user";
+    private static final String GET_USER_URL = "/api/v1/users";
 
     private static final String USERNAME = "user user";
     private static final String EMAIL = "new.user@example.com";
     private static final String PASSWORD = "password12345";
+    private static final String TIMEZONE = "Europe/Moscow";
 
     @Test
     void shouldAuthenticateExistingUserAndReturnJwt() throws Exception {
@@ -33,6 +34,7 @@ public class AuthenticationTest extends IntegrationTest {
                 USERNAME,
                 EMAIL,
                 PASSWORD,
+                TIMEZONE,
                 userRepository,
                 passwordEncoder
         );
@@ -56,6 +58,7 @@ public class AuthenticationTest extends IntegrationTest {
                 USERNAME,
                 EMAIL,
                 PASSWORD,
+                TIMEZONE,
                 userRepository,
                 passwordEncoder
         );
@@ -87,6 +90,7 @@ public class AuthenticationTest extends IntegrationTest {
                 USERNAME,
                 EMAIL,
                 PASSWORD,
+                TIMEZONE,
                 userRepository,
                 passwordEncoder
         );

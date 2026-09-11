@@ -20,11 +20,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class UserRegistrationTest extends IntegrationTest {
 
     private static final String REGISTER_URL = "/api/v1/auth/register";
-    private static final String GET_USER_URL = "/api/v1/user";
+    private static final String GET_USER_URL = "/api/v1/users";
 
     private static final String USERNAME = "user user";
     private static final String EMAIL = "new.user@example.com";
     private static final String PASSWORD = "password12345";
+    private static final String TIMEZONE = "Europe/Moscow";
 
     @Test
     void shouldRegisterUserAndReturnJwt() throws Exception {
@@ -32,7 +33,8 @@ public class UserRegistrationTest extends IntegrationTest {
                         USERNAME,
                         EMAIL,
                         PASSWORD,
-                        PASSWORD
+                        PASSWORD,
+                        TIMEZONE
         );
 
         mockMvc.perform(post(REGISTER_URL)
@@ -59,7 +61,8 @@ public class UserRegistrationTest extends IntegrationTest {
                 USERNAME,
                 EMAIL,
                 PASSWORD,
-                PASSWORD
+                PASSWORD,
+                TIMEZONE
         );
 
         String body = objectMapper.writeValueAsString(request);
@@ -86,7 +89,8 @@ public class UserRegistrationTest extends IntegrationTest {
                 USERNAME,
                 EMAIL,
                 PASSWORD,
-                "anotherPassword123"
+                "anotherPassword123",
+                TIMEZONE
         );
 
         mockMvc.perform(post(REGISTER_URL)
@@ -105,6 +109,7 @@ public class UserRegistrationTest extends IntegrationTest {
                 "abc",
                 "invalid-email",
                 "short",
+                "",
                 ""
         );
 
@@ -122,7 +127,8 @@ public class UserRegistrationTest extends IntegrationTest {
                 USERNAME,
                 EMAIL,
                 PASSWORD,
-                PASSWORD
+                PASSWORD,
+                TIMEZONE
         );
 
         var registrationResponse = mockMvc.perform(post(REGISTER_URL)

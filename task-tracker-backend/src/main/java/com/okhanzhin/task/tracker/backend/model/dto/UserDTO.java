@@ -23,5 +23,5 @@ public class UserDTO {
     private String email;
     private String password;
     private Status status;
-
+    private String timezone;
 }

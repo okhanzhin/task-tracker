@@ -17,3 +17,10 @@ databaseChangeLog:
         - sqlFile:
             comment: create users table
             path: db/changelog/sql/002-create-users-table.sql
+  - changeSet:
+      id: 003-add-users-timezone-column
+      author: okhanzhin
+      changes:
+        - sqlFile:
+            comment: add users timezone column
+            path: db/changelog/sql/003-add-users-timezone-column.sql

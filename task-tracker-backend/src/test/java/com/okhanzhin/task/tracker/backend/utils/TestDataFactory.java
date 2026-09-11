@@ -18,6 +18,7 @@ public final class TestDataFactory {
             String username,
             String email,
             String rawPassword,
+            String timezone,
             PasswordEncoder passwordEncoder
     ) {
         return UserDAO.builder()
@@ -25,6 +26,7 @@ public final class TestDataFactory {
                 .email(email)
                 .password(passwordEncoder.encode(rawPassword))
                 .status(Status.ACTIVE)
+                .timezone(timezone)
                 .build();
     }
 
@@ -32,6 +34,7 @@ public final class TestDataFactory {
             String username,
             String email,
             String rawPassword,
+            String timezone,
             UserRepository userRepository,
             PasswordEncoder passwordEncoder
     ) {
@@ -39,6 +42,7 @@ public final class TestDataFactory {
                 username,
                 email,
                 rawPassword,
+                timezone,
                 passwordEncoder
         );
 

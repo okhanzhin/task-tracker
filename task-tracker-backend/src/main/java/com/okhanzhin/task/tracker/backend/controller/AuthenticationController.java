@@ -30,7 +30,7 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticate(@RequestBody AuthenticationRequest request) {
+    public ResponseEntity<?> authenticate(@Valid @RequestBody AuthenticationRequest request) {
         AuthenticationResponse authResponse = authenticationService.authenticate(request);
 
         return ResponseEntity.ok()
@@ -43,11 +43,12 @@ public class AuthenticationController {
         AuthenticationResponse registerResponse = authenticationService.register(registerRequest);
 
         return ResponseEntity.ok()
-                .header(AUTHORIZATION, "Bearer " + registerResponse.getToken())
+                .header(AUTHORIZATION, BEARER_PREFIX + registerResponse.getToken())
                 .build();
     }
 
     @PostMapping("/logout")
+    // TODO: 10.09.2026 попробовать убрать request
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         response.setHeader(AUTHORIZATION, "");
         SecurityContextHolder.clearContext();

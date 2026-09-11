@@ -34,4 +34,8 @@ public class RegisterRequest {
 
     @NotBlank(message = "Please repeat the password")
     private String confirmPassword;
+
+    @NotBlank(message = "Time zone must not be blank")
+    @Size(max = 64, message = "Time zone must not exceed 64 characters")
+    private String timezone;
 }
