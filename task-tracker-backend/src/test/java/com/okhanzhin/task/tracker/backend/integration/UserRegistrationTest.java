@@ -6,6 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.EMAIL;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.GET_USER_URL;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.PASSWORD;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.REGISTER_URL;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.TIMEZONE;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.USERNAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -19,20 +25,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 public class UserRegistrationTest extends IntegrationTest {
 
-    private static final String REGISTER_URL = "/api/v1/auth/register";
-    private static final String GET_USER_URL = "/api/v1/user";
-
-    private static final String USERNAME = "user user";
-    private static final String EMAIL = "new.user@example.com";
-    private static final String PASSWORD = "password12345";
-
     @Test
     void shouldRegisterUserAndReturnJwt() throws Exception {
         var request = new RegisterRequest(
                         USERNAME,
                         EMAIL,
                         PASSWORD,
-                        PASSWORD
+                        PASSWORD,
+                        TIMEZONE
         );
 
         mockMvc.perform(post(REGISTER_URL)
@@ -59,7 +59,8 @@ public class UserRegistrationTest extends IntegrationTest {
                 USERNAME,
                 EMAIL,
                 PASSWORD,
-                PASSWORD
+                PASSWORD,
+                TIMEZONE
         );
 
         String body = objectMapper.writeValueAsString(request);
@@ -86,7 +87,8 @@ public class UserRegistrationTest extends IntegrationTest {
                 USERNAME,
                 EMAIL,
                 PASSWORD,
-                "anotherPassword123"
+                "anotherPassword123",
+                TIMEZONE
         );
 
         mockMvc.perform(post(REGISTER_URL)
@@ -105,6 +107,7 @@ public class UserRegistrationTest extends IntegrationTest {
                 "abc",
                 "invalid-email",
                 "short",
+                "",
                 ""
         );
 
@@ -122,7 +125,8 @@ public class UserRegistrationTest extends IntegrationTest {
                 USERNAME,
                 EMAIL,
                 PASSWORD,
-                PASSWORD
+                PASSWORD,
+                TIMEZONE
         );
 
         var registrationResponse = mockMvc.perform(post(REGISTER_URL)

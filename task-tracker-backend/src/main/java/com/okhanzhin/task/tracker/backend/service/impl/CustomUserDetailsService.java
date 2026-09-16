@@ -32,6 +32,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 ));
 
         return SecurityUser.builder()
+                .userId(user.getId())
                 .username(user.getEmail())
                 .password(user.getPassword())
                 .isActive(user.getStatus().equals(Status.ACTIVE))

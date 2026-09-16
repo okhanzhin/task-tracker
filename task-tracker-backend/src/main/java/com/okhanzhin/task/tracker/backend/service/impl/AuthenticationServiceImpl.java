@@ -1,6 +1,7 @@
 package com.okhanzhin.task.tracker.backend.service.impl;
 
 import com.okhanzhin.task.tracker.backend.exception.InvalidCredentialsException;
+import com.okhanzhin.task.tracker.backend.mapper.UserMapper;
 import com.okhanzhin.task.tracker.backend.model.dto.SecurityUser;
 import com.okhanzhin.task.tracker.backend.model.dto.UserDTO;
 import com.okhanzhin.task.tracker.backend.model.dto.request.AuthenticationRequest;
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
@@ -26,24 +28,35 @@ import org.springframework.stereotype.Service;
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserService userService;
+    private final UserMapper userMapper;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-            log.info("User with email: {} successfully authenticated", request.getEmail());
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+            SecurityUser userDetails = (SecurityUser) authentication.getPrincipal();
+
+            log.info("User with email: {} successfully authenticated",
+                    userDetails.getUsername()
+            );
+
+            return AuthenticationResponse.builder()
+                    .token(jwtService.generateToken(userDetails))
+                    .build();
         } catch (AuthenticationException e) {
-            log.info("User with email: {} - not authenticated: {}", request.getEmail(), e.getClass().getSimpleName());
+            log.info("User with email: {} - not authenticated: {}",
+                    request.getEmail(),
+                    e.getClass().getSimpleName()
+            );
             throw new InvalidCredentialsException();
         }
-
-        UserDTO user = userService.findByEmail(request.getEmail());
-
-        return AuthenticationResponse.builder()
-                .token(jwtService.generateToken(SecurityUser.fromUser(user)))
-                .build();
     }
 
     @Override
@@ -51,7 +64,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         UserDTO user = userService.createUser(request);
 
         return AuthenticationResponse.builder()
-                .token(jwtService.generateToken(SecurityUser.fromUser(user)))
+                .token(jwtService.generateToken(userMapper.mapToUserDetails(user)))
                 .build();
     }
 }

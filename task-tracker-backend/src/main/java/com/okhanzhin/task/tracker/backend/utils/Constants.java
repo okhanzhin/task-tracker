@@ -12,4 +12,6 @@ public class Constants {
 
     public static final String UK_USERS_EMAIL = "users_email_key";
     public static final String BEARER_PREFIX = "Bearer ";
+
+    public static final String TASKS_BASE_URI = "/api/v1/tasks";
 }
