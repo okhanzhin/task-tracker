@@ -5,9 +5,12 @@ COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
+
 COPY task-tracker-backend/pom.xml task-tracker-backend/pom.xml
+COPY email-sender-service/pom.xml email-sender-service/pom.xml
 RUN ./mvnw -B -pl task-tracker-backend dependency:go-offline
-COPY task-tracker-backend/src ./task-tracker-backend/src
+COPY task-tracker-backend/src task-tracker-backend/src
+COPY email-sender-service/src email-sender-service/src
 RUN ./mvnw -B -pl task-tracker-backend package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
