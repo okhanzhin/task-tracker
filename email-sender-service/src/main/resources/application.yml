@@ -1,0 +1,42 @@
+server:
+  port: ${APP_PORT:8081}
+
+spring:
+  application:
+    name: email-sender-service
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info
+  profiles:
+    active: default
+  mail:
+    host: ${UNISENDER_SMTP_HOST:smtp.go2.unisender.ru}
+    port: ${UNISENDER_SMTP_PORT:587}
+    username: ${UNISENDER_SMTP_USERNAME:8341770}
+    password: ${UNISENDER_SMTP_PASSWORD:6g1jzrnnm49bzkdqbg36i8z7dzkw3jand7ywioxa}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:task-tracker-email-sender}
+      auto-offset-reset: earliest
+
+app:
+  mail:
+    from: ${UNISENDER_FROM_EMAIL:noreply@sandbox-8341770-478f27.unigosendbox.com}
+    from-name: ${UNISENDER_FROM_NAME:Task Tracker}
+  kafka:
+    topics:
+      email-sending: ${EMAIL_SENDING_KAFKA_TOPIC:EMAIL_SENDING_TASKS}
