@@ -8,5 +8,5 @@ import com.okhanzhin.email.sender.service.model.EmailNotification;
  */
 public interface EmailSenderService {
 
-    boolean sendEmailNotification(EmailNotification notification);
+    void send(EmailNotification notification);
 }

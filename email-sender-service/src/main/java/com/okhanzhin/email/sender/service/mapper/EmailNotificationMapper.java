@@ -14,9 +14,10 @@ public class EmailNotificationMapper {
     public EmailNotification mapFromEmailSendingTask(EmailSendingTask task) {
 
         return EmailNotification.builder()
-                .recipientEMail(task.getRecipientEmail())
+                .messageId(task.getMessageId())
+                .recipientEmail(task.getRecipientEmail())
                 .subject(task.getSubject())
-                .text(task.getBody())
+                .body(task.getBody())
                 .build();
     }
 }

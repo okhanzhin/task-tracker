@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 /**
  *
  * @author okhanzhin on 18.09.2026
@@ -15,7 +17,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class EmailNotification {
 
+    private UUID messageId;
+    private String recipientEmail;
     private String subject;
-    private String text;
-    private String recipientEMail;
+    private String body;
 }

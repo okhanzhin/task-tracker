@@ -1,14 +1,18 @@
 package com.okhanzhin.email.sender.service.service.impl;
 
+import com.okhanzhin.email.sender.service.config.properties.MailProperties;
+import com.okhanzhin.email.sender.service.exception.EmailSendingException;
 import com.okhanzhin.email.sender.service.model.EmailNotification;
 import com.okhanzhin.email.sender.service.service.EmailSenderService;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  *
@@ -20,26 +24,36 @@ import org.springframework.stereotype.Service;
 public class EmailSenderServiceImpl implements EmailSenderService {
 
     private final JavaMailSender mailSender;
-
-    @Value("${app.mail.from}")
-    private String from;
+    private final MailProperties mailProperties;
 
     @Override
-    public boolean sendEmailNotification(EmailNotification notification) {
-        var message = new SimpleMailMessage();
-
-        message.setFrom(from);
-        message.setTo(notification.getRecipientEMail());
-        message.setSubject(notification.getSubject());
-        message.setText(notification.getText());
-
+    public void send(EmailNotification notification) {
         try {
+            var message = mailSender.createMimeMessage();
+            var helper = new MimeMessageHelper(
+                    message,
+                    false,
+                    StandardCharsets.UTF_8.name()
+            );
+
+            helper.setFrom(mailProperties.fromAddress());
+            helper.setTo(notification.getRecipientEmail());
+            helper.setSubject(notification.getSubject());
+            helper.setText(notification.getBody(), false);
+
             mailSender.send(message);
-            log.info("Notification successfully send to {}", notification.getRecipientEMail());
-            return true;
-        } catch (MailException e) {
-            log.error("Error sending notification to {}: {}", notification.getRecipientEMail(), e.getMessage());
-            return false;
+
+            log.info("Email send: messageId={}, recipient={}",
+                    notification.getMessageId(),
+                    notification.getRecipientEmail());
+        } catch (MessagingException | MailException exception) {
+            log.error(
+                    "Email sending failed: messageId={}, recipient={}",
+                    notification.getMessageId(),
+                    notification.getRecipientEmail(),
+                    exception
+            );
+            throw new EmailSendingException(notification.getMessageId(), exception);
         }
     }
 }

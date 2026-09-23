@@ -10,6 +10,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import java.util.Map;
@@ -23,27 +24,15 @@ import java.util.Map;
 public class KafkaConsumerConfig {
 
     @Bean
-    public ConsumerFactory<String, EmailSendingTask> emailSendingTaskConsumerFactory(KafkaProperties kafkaProperties) {
-        Map<String, Object> config = kafkaProperties.buildConsumerProperties();
-
-        JsonDeserializer<EmailSendingTask> valueDeserializer =
-                new JsonDeserializer<>(EmailSendingTask.class, false);
-
-        valueDeserializer.addTrustedPackages(
-                "com.okhanzhin.email.sender.service.model"
-        );
-
-        return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), valueDeserializer);
-    }
-
-    @Bean
     public ConcurrentKafkaListenerContainerFactory<String, EmailSendingTask> kafkaListenerContainerFactory(
-            ConsumerFactory<String, EmailSendingTask> emailSendingTaskConsumerFactory
+            ConsumerFactory<String, EmailSendingTask> emailSendingTaskConsumerFactory,
+            DefaultErrorHandler kafkaErrorHandler
     ) {
         ConcurrentKafkaListenerContainerFactory<String, EmailSendingTask> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(emailSendingTaskConsumerFactory);
+        factory.setCommonErrorHandler(kafkaErrorHandler);
 
         return factory;
     }
