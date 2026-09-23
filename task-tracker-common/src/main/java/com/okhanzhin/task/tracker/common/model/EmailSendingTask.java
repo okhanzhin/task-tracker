@@ -1,4 +1,4 @@
-package com.okhanzhin.email.sender.service.model;
+package com.okhanzhin.task.tracker.common.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;

@@ -73,6 +73,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.okhanzhin</groupId>
+            <artifactId>task-tracker-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>

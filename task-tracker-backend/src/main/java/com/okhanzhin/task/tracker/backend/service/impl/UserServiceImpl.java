@@ -5,7 +5,6 @@ import com.okhanzhin.task.tracker.backend.exception.EmailAlreadyRegisteredExcept
 import com.okhanzhin.task.tracker.backend.exception.UserNotFoundException;
 import com.okhanzhin.task.tracker.backend.mapper.UserMapper;
 import com.okhanzhin.task.tracker.backend.model.dto.UserDTO;
-import com.okhanzhin.task.tracker.backend.model.dto.kafka.EmailSendingTask;
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.UserResponse;
 import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
@@ -13,6 +12,7 @@ import com.okhanzhin.task.tracker.backend.producer.EmailTaskProducer;
 import com.okhanzhin.task.tracker.backend.repository.UserRepository;
 import com.okhanzhin.task.tracker.backend.service.UserService;
 import com.okhanzhin.task.tracker.backend.utils.Constants;
+import com.okhanzhin.task.tracker.common.model.EmailSendingTask;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
