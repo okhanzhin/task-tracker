@@ -18,7 +18,6 @@ import java.util.Date;
  * @author okhanzhin on 30.08.2026
  */
 @Service
-
 public class JwtServiceImpl implements JwtService {
 
     private final SecretKey secretKey;

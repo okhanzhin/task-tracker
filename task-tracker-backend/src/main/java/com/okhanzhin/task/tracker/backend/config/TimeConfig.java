@@ -10,7 +10,7 @@ import java.time.Clock;
  * @author okhanzhin on 10.09.2026
  */
 @Configuration
-public class TimeConfiguration {
+public class TimeConfig {
 
     @Bean
     public Clock clock() {

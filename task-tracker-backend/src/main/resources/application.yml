@@ -35,6 +35,21 @@ spring:
     default-schema: ${spring.datasource.hikari.schema}
     liquibase-schema: ${SPRING_LIQUIBASE_LIQUIBASE_SCHEMA:tasks_liquibase}
     change-log: classpath:/db/changelog/db.changelog-master.yaml
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        add.type.info.headers: false
+
+app:
+  kafka:
+    topics:
+      email-sending: ${EMAIL_SENDING_KAFKA_TOPIC:EMAIL_SENDING_TASKS}
+
 jwt:
   secret: ${JWT_SECRET:K7q7NnSAx5ogW6MM0G0YvYsw7WXvYDY12E5tTBaVyX8=}
   lifetime: ${JWT_EXPIRATION:PT1H}

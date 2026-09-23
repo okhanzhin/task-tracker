@@ -1,0 +1,66 @@
+server:
+  port: ${APP_PORT:8081}
+
+spring:
+  application:
+    name: email-sender-service
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info
+  profiles:
+    active: default
+  mail:
+    host: ${UNISENDER_SMTP_HOST}
+    port: ${UNISENDER_SMTP_PORT:587}
+    username: ${UNISENDER_SMTP_USERNAME}
+    password: ${UNISENDER_SMTP_PASSWORD}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:task-tracker-email-sender}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.use.type.headers: false
+        spring.json.trusted.packages: com.okhanzhin.task.tracker.common.model
+        spring.json.value.default.type: com.okhanzhin.task.tracker.common.model.EmailSendingTask
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+    listener:
+      ack-mode: record
+      concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
+
+app:
+  mail:
+    from: ${UNISENDER_FROM_EMAIL}
+    from-name: ${UNISENDER_FROM_NAME:Task Tracker}
+  kafka:
+    topics:
+      email-sending: ${EMAIL_SENDING_KAFKA_TOPIC:EMAIL_SENDING_TASKS}
+      dead-letter-suffix: ${EMAIL_SENDING_DLT_SUFFIX:.DLT}
+      partitions: ${KAFKA_TOPIC_PARTITIONS:3}
+      replicas: ${KAFKA_TOPIC_REPLICAS:1}
+    retry:
+      max-retries: ${KAFKA_EMAIL_MAX_RETRIES:3}
+      initial-interval-ms: ${KAFKA_EMAIL_RETRY_INITIAL_INTERVAL_MS:1000}
+      multiplier: ${KAFKA_EMAIL_RETRY_MULTIPLIER:2.0}
+      max-interval-ms: ${KAFKA_EMAIL_RETRY_MAX_INTERVAL_MS:4000}

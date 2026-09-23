@@ -14,4 +14,7 @@ public class Constants {
     public static final String BEARER_PREFIX = "Bearer ";
 
     public static final String TASKS_BASE_URI = "/api/v1/tasks";
+
+    public static final String SUCCESS_USER_REGISTRATION_EMAIL_TASK_BODY = "Congratulations! Your Task Tracker account has been successfully created—start organizing your tasks and achieving more today.";
+    public static final String SUCCESS_USER_REGISTRATION_EMAIL_TASK_SUBJECT = "Task Tracker Service: Successfully Registration!";
 }
