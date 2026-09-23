@@ -1,6 +1,6 @@
 package com.okhanzhin.task.tracker.backend.producer;
 
-import com.okhanzhin.task.tracker.backend.config.properties.KafkaTopicsProperties;
+import com.okhanzhin.task.tracker.backend.config.properties.AppKafkaProperties;
 import com.okhanzhin.task.tracker.backend.model.dto.kafka.EmailSendingTask;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,11 +15,11 @@ import org.springframework.stereotype.Component;
 public class EmailTaskProducer {
 
     private final KafkaTemplate<String, EmailSendingTask> kafkaTemplate;
-    private final KafkaTopicsProperties kafkaTopicsProperties;
+    private final AppKafkaProperties appKafkaProperties;
 
     public void send(EmailSendingTask emailSendingTask) {
         kafkaTemplate.send(
-                kafkaTopicsProperties.getEmailSending(),
+                appKafkaProperties.getTopics().getEmailSending(),
                 emailSendingTask.getRecipientEmail(),
                 emailSendingTask
         );
