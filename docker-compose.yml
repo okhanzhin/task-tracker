@@ -82,6 +82,8 @@ services:
         depends_on:
           postgresql:
             condition: service_healthy
+          kafka:
+            condition: service_healthy
         networks:
         - task-tracker
 
@@ -101,6 +103,20 @@ services:
         KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
         KAFKA_CONSUMER_GROUP_ID: ${KAFKA_CONSUMER_GROUP_ID}
         EMAIL_SENDING_KAFKA_TOPIC: ${EMAIL_SENDING_KAFKA_TOPIC}
+      depends_on:
+        kafka:
+          condition: service_healthy
+      networks:
+        - task-tracker
+
+    summarization-service:
+      build:
+        context: .
+        dockerfile: summarization-service/Dockerfile
+      container_name: summarization-service
+      restart: on-failure
+      environment:
+        KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
       depends_on:
         kafka:
           condition: service_healthy
