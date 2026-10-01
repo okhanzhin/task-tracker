@@ -1,0 +1,48 @@
+server:
+  port: ${APP_PORT:8082}
+
+spring:
+    application:
+        name: summarization-service
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info
+    profiles:
+      active: default
+    kafka:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+      consumer:
+        group-id: ${KAFKA_CONSUMER_GROUP_ID:task-tracker-summarization}
+        auto-offset-reset: earliest
+        enable-auto-commit: false
+        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+        properties:
+          spring.json.use.type.headers: false
+          spring.json.trusted.packages: com.okhanzhin.task.tracker.common.model
+      producer:
+        key-serializer: org.apache.kafka.common.serialization.StringSerializer
+        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        acks: all
+        properties:
+          enable.idempotence: true
+      listener:
+        ack-mode: record
+        concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
+
+app:
+    kafka:
+        enabled: true
+        topics:
+          summarization-request-topic: ${SUMMARIZATION_REQUEST_KAFKA_TOPIC:SUMMARIZATION_REQUESTS}
+          summarization-response-topic: ${SUMMARIZATION_RESPONSE_KAFKA_TOPIC:SUMMARIZATION_RESPONSES}
+          partitions: ${KAFKA_TOPIC_PARTITIONS:3}
+          replicas: ${KAFKA_TOPIC_REPLICAS:1}
+        retry:
+          max-attempts: ${KAFKA_RETRY_MAX_ATTEMPTS:3}
+          backoff:
+            initial-interval: ${KAFKA_RETRY_BACKOFF_INITIAL_INTERVAL:1000}
+            multiplier: ${KAFKA_RETRY_BACKOFF_MULTIPLIER:2.0}
+            max-interval: ${KAFKA_RETRY_BACKOFF_MAX_INTERVAL:10000}

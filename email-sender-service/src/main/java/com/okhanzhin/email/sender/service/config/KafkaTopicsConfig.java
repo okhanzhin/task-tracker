@@ -22,8 +22,8 @@ public class KafkaTopicsConfig {
         AppKafkaProperties.Topics topics = appKafkaProperties.getTopics();
 
         return TopicBuilder.name(topics.getEmailSending())
-                .partitions(3)
-                .replicas(1)
+                .partitions(topics.getPartitions())
+                .replicas(topics.getReplicas())
                 .build();
     }
 
@@ -32,8 +32,8 @@ public class KafkaTopicsConfig {
         AppKafkaProperties.Topics topics = appKafkaProperties.getTopics();
 
         return TopicBuilder.name(topics.getEmailSendingDlt())
-                .partitions(3)
-                .replicas(1)
+                .partitions(topics.getPartitions())
+                .replicas(topics.getReplicas())
                 .build();
     }
 }

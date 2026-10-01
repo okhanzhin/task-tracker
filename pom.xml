@@ -8,10 +8,12 @@
     <artifactId>task-tracker</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
     <modules>
         <module>task-tracker-common</module>
         <module>task-tracker-backend</module>
         <module>email-sender-service</module>
+        <module>summarization-service</module>
     </modules>
 
     <properties>
@@ -34,5 +36,4 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
 </project>
