@@ -1,0 +1,49 @@
+server:
+    port: ${APP_PORT:8083}
+
+spring:
+    application:
+        name: task-tracker-scheduler
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health,info
+    profiles:
+      active: default
+    kafka:
+      bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+      consumer:
+        group-id: ${KAFKA_CONSUMER_GROUP_ID:task-tracker-scheduler}
+        auto-offset-reset: earliest
+        enable-auto-commit: false
+        key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+        properties:
+          spring.json.use.type.headers: false
+          spring.json.trusted.packages: com.okhanzhin.task.tracker.common.model
+      producer:
+        key-serializer: org.apache.kafka.common.serialization.StringSerializer
+        value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        acks: all
+        properties:
+          enable.idempotence: true
+      listener:
+        ack-mode: record
+        concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
+
+app:
+  kafka:
+    topics:
+      email-sending: ${EMAIL_SENDING_KAFKA_TOPIC:EMAIL_SENDING_TASKS}
+      summarization-request: ${SUMMARIZATION_REQUEST_KAFKA_TOPIC:SUMMARIZATION_REQUESTS}
+      summarization-response: ${SUMMARIZATION_RESPONSE_KAFKA_TOPIC:SUMMARIZATION_RESPONSES}
+      partitions: ${KAFKA_TOPIC_PARTITIONS:3}
+      replicas: ${KAFKA_TOPIC_REPLICAS:1}
+
+clients:
+  task-tracker:
+    base-url: ${USER_TASKS_API_BASE_URL:http://localhost:8080}
+    connect-timeout: 3s
+    read-timeout: 10s
+    api-key: ${TASK_TRACKER_INTERNAL_API_KEY}
