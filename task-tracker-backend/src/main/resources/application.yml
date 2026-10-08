@@ -2,6 +2,8 @@ server:
   port: ${APP_PORT:8080}
 
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: task-tracker-backend
   management:
@@ -53,3 +55,4 @@ app:
 jwt:
   secret: ${JWT_SECRET:K7q7NnSAx5ogW6MM0G0YvYsw7WXvYDY12E5tTBaVyX8=}
   lifetime: ${JWT_EXPIRATION:PT1H}
+  service-lifetime: ${JWT_SERVICE_EXPIRATION:PT2160H} # перевыпускать токен для сервисов каждые 90 дней

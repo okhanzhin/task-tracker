@@ -44,6 +44,7 @@ public class SecurityConfig {
                         exception.authenticationEntryPoint(entryPoint))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/register").permitAll()
+                        .requestMatchers("/internal/v1/reports/**").hasAuthority("SCOPE_internal:reports:read")
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/users").authenticated()
                         .requestMatchers("/api/v1/tasks/**").authenticated()

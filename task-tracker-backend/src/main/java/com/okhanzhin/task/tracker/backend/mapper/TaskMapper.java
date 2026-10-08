@@ -4,6 +4,8 @@ import com.okhanzhin.task.tracker.backend.model.dto.request.CreateTaskRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.TaskResponse;
 import com.okhanzhin.task.tracker.backend.model.entity.TaskDAO;
 import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
+import com.okhanzhin.task.tracker.backend.model.entity.projection.ReportTaskView;
+import com.okhanzhin.task.tracker.common.model.report.TaskData;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -41,5 +43,14 @@ public class TaskMapper {
                 .completed(task.isCompleted())
                 .completedAt(task.getCompletedAt())
                 .build();
+    }
+
+    public TaskData toTaskData(ReportTaskView taskView) {
+        return new TaskData(
+                taskView.getId(),
+                taskView.getTitle(),
+                taskView.getDescription(),
+                taskView.getCompletedAt()
+        );
     }
 }

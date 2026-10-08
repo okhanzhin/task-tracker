@@ -10,6 +10,8 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class Constants {
 
+    public static final String TASK_TRACKER_SCHEDULER_TOKEN_SUBJECT = "task-tracker-scheduler";
+
     public static final String UK_USERS_EMAIL = "users_email_key";
     public static final String BEARER_PREFIX = "Bearer ";
 

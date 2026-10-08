@@ -1,5 +1,6 @@
 package com.okhanzhin.task.tracker.backend.service;
 
+import io.jsonwebtoken.Claims;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
@@ -9,6 +10,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 public interface JwtService {
 
     String generateToken(UserDetails userDetails);
+
+    String generateSchedulerToken();
+
+    Claims getClaims(String token);
 
     String getUsername(String token);
 }
