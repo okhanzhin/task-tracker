@@ -87,6 +87,26 @@ services:
         networks:
         - task-tracker
 
+    task-tracker-scheduler:
+      build:
+        context: .
+        dockerfile: task-tracker-scheduler/Dockerfile
+      container_name: task-tracker-scheduler
+      restart: on-failure
+      environment:
+        KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+        KAFKA_CONSUMER_GROUP_ID: ${KAFKA_CONSUMER_GROUP_ID}
+        EMAIL_SENDING_KAFKA_TOPIC: ${EMAIL_SENDING_KAFKA_TOPIC}
+        SUMMARIZATION_REQUEST_KAFKA_TOPIC: ${SUMMARIZATION_REQUEST_KAFKA_TOPIC}
+        SUMMARIZATION_RESPONSE_KAFKA_TOPIC: ${SUMMARIZATION_RESPONSE_KAFKA_TOPIC}
+        TASK_TRACKER_BACKEND_URL: ${TASK_TRACKER_BACKEND_URL}
+        SCHEDULER_SERVICE_TOKEN: ${SCHEDULER_SERVICE_TOKEN}
+      depends_on:
+        kafka:
+          condition: service_healthy
+      networks:
+        - task-tracker
+
     email-sender-service:
       build:
         context: .

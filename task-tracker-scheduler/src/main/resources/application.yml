@@ -42,8 +42,10 @@ app:
       replicas: ${KAFKA_TOPIC_REPLICAS:1}
 
 clients:
-  task-tracker:
-    base-url: ${USER_TASKS_API_BASE_URL:http://localhost:8080}
-    connect-timeout: 3s
-    read-timeout: 10s
-    api-key: ${TASK_TRACKER_INTERNAL_API_KEY}
+  task-tracker-api:
+    base-url: ${TASK_TRACKER_BACKEND_URL:http://localhost:8080}
+    daily-report-data-path: ${TASK_TRACKER_DAILY_REPORT_DATA_PATH:/internal/v1/reports/daily}
+    daily-report-data-page-size: ${TASK_TRACKER_DAILY_REPORT_DATA_PAGE_SIZE:100}
+    service-token: ${SCHEDULER_SERVICE_TOKEN}
+    connect-timeout: 5s
+    read-timeout: 5s
