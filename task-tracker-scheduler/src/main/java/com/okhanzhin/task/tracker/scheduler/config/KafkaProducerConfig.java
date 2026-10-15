@@ -1,6 +1,6 @@
 package com.okhanzhin.task.tracker.scheduler.config;
 
-import com.okhanzhin.task.tracker.common.model.request.SummarizationRequest;
+import com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationRequest;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,22 +14,23 @@ import java.util.Map;
  *
  * @author okhanzhin on 05.10.2026
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class KafkaProducerConfig {
 
     @Bean
     public ProducerFactory<String, SummarizationRequest> summarizationRequestProducerFactory(
             KafkaProperties kafkaProperties
     ) {
-        Map<String, Object> config = kafkaProperties.buildProducerProperties();
+        Map<String, Object> config =
+                kafkaProperties.buildProducerProperties();
 
         return new DefaultKafkaProducerFactory<>(config);
     }
 
     @Bean
     public KafkaTemplate<String, SummarizationRequest> summarizationRequestKafkaTemplate(
-            ProducerFactory<String, SummarizationRequest> summarizationRequestProducerFactory
+            ProducerFactory<String, SummarizationRequest> producerFactory
     ) {
-        return new KafkaTemplate<>(summarizationRequestProducerFactory);
+        return new KafkaTemplate<>(producerFactory);
     }
 }

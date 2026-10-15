@@ -1,6 +1,6 @@
 package com.okhanzhin.task.tracker.backend.config;
 
-import com.okhanzhin.task.tracker.common.model.EmailSendingTask;
+import com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.KafkaTemplate;

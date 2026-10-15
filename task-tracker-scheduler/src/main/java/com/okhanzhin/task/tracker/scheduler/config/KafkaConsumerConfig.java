@@ -1,6 +1,6 @@
 package com.okhanzhin.task.tracker.scheduler.config;
 
-import com.okhanzhin.task.tracker.common.model.response.SummarizationResponse;
+import org.springframework.boot.autoconfigure.kafka.ConcurrentKafkaListenerContainerFactoryConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
@@ -13,18 +13,19 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
  * @author okhanzhin on 05.10.2026
  */
 @EnableKafka
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class KafkaConsumerConfig {
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, SummarizationResponse> kafkaListenerContainerFactory(
-            ConsumerFactory<String, SummarizationResponse> summarizationResponseConsumerFactory,
+    public ConcurrentKafkaListenerContainerFactory<Object, Object> kafkaListenerContainerFactory(
+            ConcurrentKafkaListenerContainerFactoryConfigurer configurer,
+            ConsumerFactory<Object, Object> consumerFactory,
             DefaultErrorHandler kafkaErrorHandler
     ) {
-        ConcurrentKafkaListenerContainerFactory<String, SummarizationResponse> factory =
+        ConcurrentKafkaListenerContainerFactory<Object, Object> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
 
-        factory.setConsumerFactory(summarizationResponseConsumerFactory);
+        configurer.configure(factory, consumerFactory);
         factory.setCommonErrorHandler(kafkaErrorHandler);
 
         return factory;

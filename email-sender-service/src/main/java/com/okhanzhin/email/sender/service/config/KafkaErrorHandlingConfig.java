@@ -3,7 +3,7 @@ package com.okhanzhin.email.sender.service.config;
 import com.okhanzhin.email.sender.service.config.properties.AppKafkaProperties;
 import com.okhanzhin.email.sender.service.exception.EmailSendingException;
 import com.okhanzhin.email.sender.service.exception.InvalidEmailTaskException;
-import com.okhanzhin.task.tracker.common.model.EmailSendingTask;
+import com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.TopicPartition;

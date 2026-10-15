@@ -4,9 +4,12 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+
+import java.time.Duration;
 
 /**
  *
@@ -22,6 +25,9 @@ public class AppKafkaProperties {
 
     @Valid
     private Retry retry = new Retry();
+
+    @Valid
+    private Rpc rpc = new Rpc();
 
     @Data
     public static class Topics {
@@ -56,5 +62,12 @@ public class AppKafkaProperties {
 
         @Min(0)
         private long maxIntervalMs = 4_000L;
+    }
+
+    @Data
+    public static class Rpc {
+
+        @NotNull
+        private Duration responseTimeout = Duration.ofSeconds(30);
     }
 }

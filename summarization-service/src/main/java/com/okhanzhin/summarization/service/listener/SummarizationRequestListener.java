@@ -3,8 +3,8 @@ package com.okhanzhin.summarization.service.listener;
 import com.okhanzhin.summarization.service.config.properties.AppKafkaProperties;
 import com.okhanzhin.summarization.service.producer.SummarizationResponseProducer;
 import com.okhanzhin.summarization.service.service.SummaryGeneratorService;
-import com.okhanzhin.task.tracker.common.model.request.SummarizationRequest;
-import com.okhanzhin.task.tracker.common.model.response.SummarizationResponse;
+import com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationRequest;
+import com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -41,22 +41,25 @@ public class SummarizationRequestListener {
                 request.getUserId()
         );
 
-        String responseTopic = StringUtils.hasText(request.getReplyTopic())
-                ? request.getReplyTopic()
-                : appKafkaProperties.getTopics().getSummarizationResponseTopic();
+        String responseTopic = resolveResponseTopic(request);
+        SummarizationResponse response = generateResponse(request);
 
+        responseProducer.send(responseTopic, response).join();
+    }
+
+    private SummarizationResponse generateResponse(
+            SummarizationRequest request
+    ) {
         try {
             String summary = summaryGeneratorService.generate(request);
 
-            SummarizationResponse response = SummarizationResponse.builder()
+            return SummarizationResponse.builder()
                     .requestId(request.getRequestId())
                     .userId(request.getUserId())
                     .userEmail(request.getUserEmail())
                     .summary(summary)
                     .success(true)
                     .build();
-
-            responseProducer.send(responseTopic, response);
         } catch (Exception exception) {
             log.error(
                     "Failed to generate summary: requestId={}, userId={}",
@@ -65,15 +68,23 @@ public class SummarizationRequestListener {
                     exception
             );
 
-            SummarizationResponse response = SummarizationResponse.builder()
+            return SummarizationResponse.builder()
                     .requestId(request.getRequestId())
                     .userId(request.getUserId())
                     .userEmail(request.getUserEmail())
                     .success(false)
                     .errorMessage("Failed to generate daily summary")
                     .build();
-
-            responseProducer.send(responseTopic, response);
         }
+    }
+
+    private String resolveResponseTopic(SummarizationRequest request) {
+        if (StringUtils.hasText(request.getReplyTopic())) {
+            return request.getReplyTopic();
+        }
+
+        return appKafkaProperties
+                .getTopics()
+                .getSummarizationResponseTopic();
     }
 }

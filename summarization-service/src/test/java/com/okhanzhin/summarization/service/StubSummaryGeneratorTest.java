@@ -1,8 +1,8 @@
 package com.okhanzhin.summarization.service;
 
 import com.okhanzhin.summarization.service.service.SummaryGeneratorService;
-import com.okhanzhin.task.tracker.common.model.request.SummarizationRequest;
-import com.okhanzhin.task.tracker.common.model.request.TaskSummaryDto;
+import com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationRequest;
+import com.okhanzhin.task.tracker.common.model.messaging.summarization.TaskSummaryDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

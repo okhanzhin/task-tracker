@@ -13,6 +13,7 @@ spring:
       active: default
     kafka:
       bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
       consumer:
         group-id: ${KAFKA_CONSUMER_GROUP_ID:task-tracker-scheduler}
         auto-offset-reset: earliest
@@ -21,13 +22,17 @@ spring:
         value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
         properties:
           spring.json.use.type.headers: false
-          spring.json.trusted.packages: com.okhanzhin.task.tracker.common.model
+          spring.json.value.default.type: com.okhanzhin.task.tracker.common.model.response.SummarizationResponse
+          spring.json.trusted.packages: com.okhanzhin.task.tracker.common.model.*
+
       producer:
         key-serializer: org.apache.kafka.common.serialization.StringSerializer
         value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
         acks: all
         properties:
           enable.idempotence: true
+          spring.json.add.type.headers: false
+
       listener:
         ack-mode: record
         concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
@@ -40,6 +45,13 @@ app:
       summarization-response: ${SUMMARIZATION_RESPONSE_KAFKA_TOPIC:SUMMARIZATION_RESPONSES}
       partitions: ${KAFKA_TOPIC_PARTITIONS:3}
       replicas: ${KAFKA_TOPIC_REPLICAS:1}
+    retry:
+      max-retries: ${KAFKA_EMAIL_MAX_RETRIES:3}
+      initial-interval-ms: ${KAFKA_EMAIL_RETRY_INITIAL_INTERVAL_MS:1000}
+      multiplier: ${KAFKA_EMAIL_RETRY_MULTIPLIER:2.0}
+      max-interval-ms: ${KAFKA_EMAIL_RETRY_MAX_INTERVAL_MS:4000}
+    rpc:
+      response-timeout: ${SUMMARIZATION_RESPONSE_TIMEOUT:30s}
 
 clients:
   task-tracker-api:

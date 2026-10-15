@@ -3,7 +3,7 @@ package com.okhanzhin.email.sender.service.listener;
 import com.okhanzhin.email.sender.service.mapper.EmailNotificationMapper;
 import com.okhanzhin.email.sender.service.service.EmailSenderService;
 import com.okhanzhin.email.sender.service.utils.EmailSendingTaskValidator;
-import com.okhanzhin.task.tracker.common.model.EmailSendingTask;
+import com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;

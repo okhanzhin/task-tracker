@@ -2,7 +2,7 @@ package com.okhanzhin.task.tracker.backend.integration;
 
 import com.okhanzhin.task.tracker.backend.abstracts.IntegrationTest;
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
-import com.okhanzhin.task.tracker.common.model.EmailSendingTask;
+import com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpHeaders;

@@ -1,8 +1,8 @@
 package com.okhanzhin.summarization.service.service.impl;
 
 import com.okhanzhin.summarization.service.service.SummaryGeneratorService;
-import com.okhanzhin.task.tracker.common.model.request.SummarizationRequest;
-import com.okhanzhin.task.tracker.common.model.request.TaskSummaryDto;
+import com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationRequest;
+import com.okhanzhin.task.tracker.common.model.messaging.summarization.TaskSummaryDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

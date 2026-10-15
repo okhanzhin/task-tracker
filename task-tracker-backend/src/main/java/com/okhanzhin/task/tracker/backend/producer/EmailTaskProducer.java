@@ -1,7 +1,7 @@
 package com.okhanzhin.task.tracker.backend.producer;
 
 import com.okhanzhin.task.tracker.backend.config.properties.AppKafkaProperties;
-import com.okhanzhin.task.tracker.common.model.EmailSendingTask;
+import com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
