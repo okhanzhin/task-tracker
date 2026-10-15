@@ -14,11 +14,13 @@ import java.util.Map;
  *
  * @author okhanzhin on 22.09.2026
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class KafkaProducerConfig {
 
     @Bean
-    public ProducerFactory<String, EmailSendingTask> emailSendingTaskProducerFactory(KafkaProperties kafkaProperties) {
+    public ProducerFactory<String, EmailSendingTask> emailSendingTaskProducerFactory(
+            KafkaProperties kafkaProperties
+    ) {
         Map<String, Object> config = kafkaProperties.buildProducerProperties();
 
         return new DefaultKafkaProducerFactory<>(config);

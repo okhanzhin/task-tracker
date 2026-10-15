@@ -24,9 +24,9 @@ import java.util.concurrent.CompletableFuture;
 )
 public class SummarizationResponseProducer {
 
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, SummarizationResponse> kafkaTemplate;
 
-    public CompletableFuture<SendResult<String, Object>> send(
+    public CompletableFuture<SendResult<String, SummarizationResponse>> send(
             String topic,
             SummarizationResponse response
     ) {

@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class EmailTaskProducer {
 
-    private final KafkaTemplate<String, EmailSendingTask> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final AppKafkaProperties appKafkaProperties;
 
     public void send(EmailSendingTask emailSendingTask) {

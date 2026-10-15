@@ -37,14 +37,15 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.use.type.headers: false
-        spring.json.trusted.packages: com.okhanzhin.task.tracker.common.model
         spring.json.value.default.type: com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask
+        spring.json.trusted.packages: com.okhanzhin.task.tracker.common.model.messaging.mail
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       properties:
         enable.idempotence: true
+        spring.json.add.type.headers: false
     listener:
       ack-mode: record
       concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}

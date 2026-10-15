@@ -30,7 +30,7 @@ public class AppKafkaProperties {
         private String emailSending;
 
         @NotBlank
-        private String deadLetterSuffix = ".DTL";
+        private String deadLetterSuffix = ".DLT";
 
         @Min(1)
         private short partitions = 3;
