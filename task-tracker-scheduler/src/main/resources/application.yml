@@ -56,5 +56,5 @@ clients:
     daily-report-data-path: ${TASK_TRACKER_DAILY_REPORT_DATA_PATH:/internal/v1/reports/daily-data}
     daily-report-data-page-size: ${TASK_TRACKER_DAILY_REPORT_DATA_PAGE_SIZE:100}
     service-token: ${SCHEDULER_SERVICE_TOKEN}
-    connect-timeout: 5s
-    read-timeout: 5s
+    connect-timeout: ${TASK_TRACKER_CONNECT_TIMEOUT:5s}
+    read-timeout: ${TASK_TRACKER_READ_TIMEOUT:5s}

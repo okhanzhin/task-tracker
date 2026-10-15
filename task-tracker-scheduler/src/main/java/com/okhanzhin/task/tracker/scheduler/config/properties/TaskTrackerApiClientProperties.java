@@ -18,7 +18,7 @@ import java.time.Duration;
 @Data
 @Validated
 @ConfigurationProperties(prefix = "clients.task-tracker-api")
-public class TrackerApiClientProperties {
+public class TaskTrackerApiClientProperties {
 
     @NotNull
     private URI baseUrl;

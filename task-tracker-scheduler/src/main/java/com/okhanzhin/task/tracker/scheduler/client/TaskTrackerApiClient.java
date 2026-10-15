@@ -1,9 +1,10 @@
 package com.okhanzhin.task.tracker.scheduler.client;
 
 import com.okhanzhin.task.tracker.common.model.report.DailyReportDataPage;
-import com.okhanzhin.task.tracker.scheduler.config.properties.TrackerApiClientProperties;
-import com.okhanzhin.task.tracker.scheduler.exception.TrackerClientException;
+import com.okhanzhin.task.tracker.scheduler.config.properties.TaskTrackerApiClientProperties;
+import com.okhanzhin.task.tracker.scheduler.exception.TaskTrackerClientException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -22,10 +23,10 @@ import static com.okhanzhin.task.tracker.scheduler.utils.Constants.TO_QUERY_PARA
  */
 @Component
 @RequiredArgsConstructor
-public class TrackerApiClient {
+public class TaskTrackerApiClient {
 
     private final RestClient restClient;
-    private final TrackerApiClientProperties properties;
+    private final TaskTrackerApiClientProperties properties;
 
     public DailyReportDataPage getDailyReportData(
             Instant from,
@@ -53,25 +54,25 @@ public class TrackerApiClient {
                     )
                     .retrieve()
                     .onStatus(
-                            status -> !status.is2xxSuccessful(),
-                            ((request, response) -> {
+                            HttpStatusCode::isError,
+                            (request, response) -> {
                                 int status = response.getStatusCode().value();
                                 String body = new String(
                                         response.getBody().readAllBytes(),
                                         StandardCharsets.UTF_8
                                 );
 
-                                throw new TrackerClientException(status, body);
-                            }))
+                                throw new TaskTrackerClientException(status, body);
+                            })
                     .body(DailyReportDataPage.class);
 
             if (page == null) {
-                throw new TrackerClientException("Task-tracker-backend returned an empty response body");
+                throw new TaskTrackerClientException("Task-tracker-backend returned an empty response body");
             }
 
             return page;
         } catch (RestClientException exception) {
-            throw new TrackerClientException(
+            throw new TaskTrackerClientException(
                     "Failed to retrieve daily report data from task-tracker-backend",
                     exception
             );

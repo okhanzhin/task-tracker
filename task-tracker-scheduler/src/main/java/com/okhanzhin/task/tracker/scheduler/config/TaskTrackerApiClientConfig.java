@@ -1,6 +1,6 @@
 package com.okhanzhin.task.tracker.scheduler.config;
 
-import com.okhanzhin.task.tracker.scheduler.config.properties.TrackerApiClientProperties;
+import com.okhanzhin.task.tracker.scheduler.config.properties.TaskTrackerApiClientProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
@@ -20,11 +20,11 @@ import static com.okhanzhin.task.tracker.scheduler.utils.Constants.BEARER_PREFIX
  */
 @Configuration(proxyBeanMethods = false)
 @RequiredArgsConstructor
-@EnableConfigurationProperties(TrackerApiClientProperties.class)
-public class TrackerApiClientConfig {
+@EnableConfigurationProperties(TaskTrackerApiClientProperties.class)
+public class TaskTrackerApiClientConfig {
 
     @Bean
-    ClientHttpRequestFactory trackerRequestFactory(TrackerApiClientProperties properties) {
+    ClientHttpRequestFactory trackerRequestFactory(TaskTrackerApiClientProperties properties) {
         ClientHttpRequestFactorySettings settings = ClientHttpRequestFactorySettings.defaults()
                 .withConnectTimeout(properties.getConnectTimeout())
                 .withReadTimeout(properties.getReadTimeout());
@@ -36,7 +36,7 @@ public class TrackerApiClientConfig {
     RestClient trackerBackendRestClient(
             RestClient.Builder builder,
             ClientHttpRequestFactory trackerRequestFactory,
-            TrackerApiClientProperties properties
+            TaskTrackerApiClientProperties properties
     ) {
         return builder
                 .baseUrl(properties.getBaseUrl())
