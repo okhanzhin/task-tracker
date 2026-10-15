@@ -17,7 +17,7 @@ import java.time.Duration;
  */
 @Data
 @Validated
-@ConfigurationProperties(prefix = "clients.task-tracker-backend")
+@ConfigurationProperties(prefix = "clients.task-tracker-api")
 public class TrackerApiClientProperties {
 
     @NotNull

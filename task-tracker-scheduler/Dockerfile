@@ -15,7 +15,7 @@ COPY summarization-service/pom.xml summarization-service/pom.xml
 RUN ./mvnw -B -pl :task-tracker-scheduler -am dependency:go-offline
 
 COPY task-tracker-common/src task-tracker-common/src
-COPY task-tracker-scheduler/src email-sender-service/src
+COPY task-tracker-scheduler/src task-tracker-scheduler/src
 
 RUN ./mvnw -B -pl :task-tracker-scheduler -am package -DskipTests
 

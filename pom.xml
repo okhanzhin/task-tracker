@@ -12,6 +12,7 @@
     <modules>
         <module>task-tracker-common</module>
         <module>task-tracker-backend</module>
+        <module>task-tracker-scheduler</module>
         <module>email-sender-service</module>
         <module>summarization-service</module>
     </modules>

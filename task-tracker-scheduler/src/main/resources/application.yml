@@ -22,7 +22,7 @@ spring:
         value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
         properties:
           spring.json.use.type.headers: false
-          spring.json.value.default.type: com.okhanzhin.task.tracker.common.model.response.SummarizationResponse
+          spring.json.value.default.type: com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationResponse
           spring.json.trusted.packages: com.okhanzhin.task.tracker.common.model.*
 
       producer:
@@ -56,7 +56,7 @@ app:
 clients:
   task-tracker-api:
     base-url: ${TASK_TRACKER_BACKEND_URL:http://localhost:8080}
-    daily-report-data-path: ${TASK_TRACKER_DAILY_REPORT_DATA_PATH:/internal/v1/reports/daily}
+    daily-report-data-path: ${TASK_TRACKER_DAILY_REPORT_DATA_PATH:/internal/v1/reports/daily-data}
     daily-report-data-page-size: ${TASK_TRACKER_DAILY_REPORT_DATA_PAGE_SIZE:100}
     service-token: ${SCHEDULER_SERVICE_TOKEN}
     connect-timeout: 5s
