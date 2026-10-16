@@ -2,10 +2,14 @@ package com.okhanzhin.task.tracker.scheduler.mapper;
 
 import com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask;
 import com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.UUID;
@@ -20,11 +24,22 @@ public class ReportEmailMapper {
     private static final DateTimeFormatter PERIOD_FORMAT =
             DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
+    private final ZoneId reportZone;
+
+    public ReportEmailMapper(
+            @Value("${app.reports.daily.zone:UTC}") String reportZone
+    ) {
+        this.reportZone = ZoneId.of(reportZone);
+    }
+
     public EmailSendingTask toEmailTask(
             SummarizationRequest request,
             String summary
     ) {
-        Objects.requireNonNull(request, "request must not be null");
+        Objects.requireNonNull(
+                request,
+                "request must not be null"
+        );
         Objects.requireNonNull(
                 request.getPeriodStart(),
                 "periodStart must not be null"
@@ -75,9 +90,17 @@ public class ReportEmailMapper {
     }
 
     private String createSubject(SummarizationRequest request) {
-        return "Task report for period %s to %s".formatted(
-                request.getPeriodStart().format(PERIOD_FORMAT),
-                request.getPeriodEnd().format(PERIOD_FORMAT)
+        return "Task report for period %s to %s (%s)".formatted(
+                formatUtcDateTime(request.getPeriodStart()),
+                formatUtcDateTime(request.getPeriodEnd()),
+                reportZone.getId()
         );
+    }
+
+    private String formatUtcDateTime(LocalDateTime utcDateTime) {
+        return utcDateTime
+                .toInstant(ZoneOffset.UTC)
+                .atZone(reportZone)
+                .format(PERIOD_FORMAT);
     }
 }
