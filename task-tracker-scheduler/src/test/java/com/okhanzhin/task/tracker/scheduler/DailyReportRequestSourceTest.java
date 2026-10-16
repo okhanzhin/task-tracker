@@ -1,8 +1,6 @@
 package com.okhanzhin.task.tracker.scheduler;
 
-import com.github.dockerjava.api.model.Task;
 import com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationRequest;
-import com.okhanzhin.task.tracker.common.model.messaging.summarization.TaskSummaryDto;
 import com.okhanzhin.task.tracker.common.model.report.DailyReportDataPage;
 import com.okhanzhin.task.tracker.common.model.report.ReportPeriod;
 import com.okhanzhin.task.tracker.common.model.report.UserReportData;
@@ -14,23 +12,23 @@ import com.okhanzhin.task.tracker.scheduler.service.DailyReportRequestSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InOrder;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 /**
@@ -41,490 +39,253 @@ import static org.mockito.Mockito.when;
 public class DailyReportRequestSourceTest {
 
     private static final Instant FROM =
-            Instant.parse("2026-10-14T00:00:00Z");
+            Instant.parse("2026-10-15T00:00:00Z");
 
     private static final Instant TO =
-            Instant.parse("2026-10-15T00:00:00Z");
+            Instant.parse("2026-10-16T00:00:00Z");
 
     private static final int PAGE_SIZE = 100;
 
     @Mock
-    private TaskTrackerApiClient trackerApiClient;
+    private TaskTrackerApiClient apiClient;
+
+    @Mock
+    private TaskTrackerApiClientProperties properties;
 
     @Mock
     private SummarizationRequestMapper mapper;
 
     @Mock
-    private TaskTrackerApiClientProperties properties;
+    private Consumer<SummarizationRequest> consumer;
 
-    @InjectMocks
-    private DailyReportRequestSource requestSource;
+    private DailyReportRequestSource source;
 
     @BeforeEach
     void setUp() {
-        when(properties.getDailyReportDataPageSize())
-                .thenReturn(PAGE_SIZE);
+        source = new DailyReportRequestSource(
+                apiClient,
+                properties,
+                mapper
+        );
     }
 
     @Test
-    void shouldReadAllPagesAndPassRequestsToConsumerInOrder() {
-        ReportPeriod period = period(FROM, TO);
+    void shouldProcessPagesAndPassCursorToNextRequest() {
+        configurePageSize();
 
-        UserReportData firstUser = user(10L, "first@example.com");
-        UserReportData secondUser = user(20L, "second@example.com");
-        UserReportData thirdUser = user(30L, "third@example.com");
+        ReportPeriod period = new ReportPeriod(FROM, TO);
 
-        DailyReportDataPage firstPage = page(
+        UserReportData firstUser = mock(UserReportData.class);
+        UserReportData secondUser = mock(UserReportData.class);
+
+        SummarizationRequest firstRequest = createRequest("request-1");
+        SummarizationRequest secondRequest = createRequest("request-2");
+
+        DailyReportDataPage firstPage = new DailyReportDataPage(
                 period,
-                List.of(firstUser, secondUser),
-                20L
+                List.of(firstUser),
+                42L
         );
 
-        DailyReportDataPage secondPage = page(
+        DailyReportDataPage secondPage = new DailyReportDataPage(
                 period,
-                List.of(thirdUser),
+                List.of(secondUser),
                 null
         );
 
-        SummarizationRequest firstRequest =
-                request("request-10", firstUser);
-
-        SummarizationRequest secondRequest =
-                request("request-20", secondUser);
-
-        SummarizationRequest thirdRequest =
-                request("request-30", thirdUser);
-
-        when(trackerApiClient.getDailyReportData(
-                FROM,
-                TO,
-                PAGE_SIZE,
-                null
+        when(apiClient.getDailyReportData(
+                FROM, TO, PAGE_SIZE, null
         )).thenReturn(firstPage);
 
-        when(trackerApiClient.getDailyReportData(
-                FROM,
-                TO,
-                PAGE_SIZE,
-                20L
+        when(apiClient.getDailyReportData(
+                FROM, TO, PAGE_SIZE, 42L
         )).thenReturn(secondPage);
 
         when(mapper.toRequest(period, firstUser))
                 .thenReturn(firstRequest);
-
         when(mapper.toRequest(period, secondUser))
                 .thenReturn(secondRequest);
 
-        when(mapper.toRequest(period, thirdUser))
-                .thenReturn(thirdRequest);
+        source.forEach(FROM, TO, consumer);
 
-        List<SummarizationRequest> receivedRequests =
-                new ArrayList<>();
+        InOrder order = inOrder(apiClient, mapper, consumer);
 
-        requestSource.forEach(
-                FROM,
-                TO,
-                receivedRequests::add
+        order.verify(apiClient).getDailyReportData(
+                FROM, TO, PAGE_SIZE, null
+        );
+        order.verify(mapper).toRequest(period, firstUser);
+        order.verify(consumer).accept(firstRequest);
+
+        order.verify(apiClient).getDailyReportData(
+                FROM, TO, PAGE_SIZE, 42L
+        );
+        order.verify(mapper).toRequest(period, secondUser);
+        order.verify(consumer).accept(secondRequest);
+
+        order.verifyNoMoreInteractions();
+    }
+
+    @Test
+    void shouldStopOnEmptyFinalPage() {
+        configurePageSize();
+
+        DailyReportDataPage page = new DailyReportDataPage(
+                new ReportPeriod(FROM, TO),
+                List.of(),
+                null
+        );
+
+        when(apiClient.getDailyReportData(
+                FROM, TO, PAGE_SIZE, null
+        )).thenReturn(page);
+
+        source.forEach(FROM, TO, consumer);
+
+        verify(apiClient).getDailyReportData(
+                FROM, TO, PAGE_SIZE, null
+        );
+        verifyNoMoreInteractions(apiClient);
+        verifyNoInteractions(mapper, consumer);
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {42L, 41L})
+    void shouldRejectNonAdvancingCursorBeforeProcessingPage(
+            long nextCursor
+    ) {
+        configurePageSize();
+
+        ReportPeriod period = new ReportPeriod(FROM, TO);
+
+        UserReportData firstUser = mock(UserReportData.class);
+        UserReportData invalidPageUser = mock(UserReportData.class);
+
+        SummarizationRequest firstRequest = createRequest("request-1");
+
+        DailyReportDataPage firstPage = new DailyReportDataPage(
+                period,
+                List.of(firstUser),
+                42L
+        );
+
+        DailyReportDataPage invalidPage = new DailyReportDataPage(
+                period,
+                List.of(invalidPageUser),
+                nextCursor
+        );
+
+        when(apiClient.getDailyReportData(
+                FROM, TO, PAGE_SIZE, null
+        )).thenReturn(firstPage);
+
+        when(apiClient.getDailyReportData(
+                FROM, TO, PAGE_SIZE, 42L
+        )).thenReturn(invalidPage);
+
+        when(mapper.toRequest(period, firstUser))
+                .thenReturn(firstRequest);
+
+        TaskTrackerClientException exception = assertThrows(
+                TaskTrackerClientException.class,
+                () -> source.forEach(FROM, TO, consumer)
         );
 
         assertEquals(
-                List.of(
-                        firstRequest,
-                        secondRequest,
-                        thirdRequest
-                ),
-                receivedRequests
+                "Task-tracker-backend returned "
+                        + "a non-advancing report cursor",
+                exception.getMessage()
         );
 
-        InOrder clientOrder = inOrder(trackerApiClient);
+        verify(consumer).accept(firstRequest);
+        verifyNoMoreInteractions(consumer);
 
-        clientOrder.verify(trackerApiClient)
-                .getDailyReportData(
-                        FROM,
-                        TO,
-                        PAGE_SIZE,
-                        null
-                );
-
-        clientOrder.verify(trackerApiClient)
-                .getDailyReportData(
-                        FROM,
-                        TO,
-                        PAGE_SIZE,
-                        20L
-                );
-
-        InOrder mapperOrder = inOrder(mapper);
-
-        mapperOrder.verify(mapper)
-                .toRequest(period, firstUser);
-
-        mapperOrder.verify(mapper)
-                .toRequest(period, secondUser);
-
-        mapperOrder.verify(mapper)
-                .toRequest(period, thirdUser);
-
-        verifyNoMoreInteractions(trackerApiClient, mapper);
-    }
-
-    @Test
-    void shouldStopAfterFirstPageWhenNextCursorIsNull() {
-        ReportPeriod period = period(FROM, TO);
-
-        UserReportData user =
-                user(10L, "user@example.com");
-
-        DailyReportDataPage page = page(
+        verify(mapper, never()).toRequest(
                 period,
-                List.of(user),
-                null
+                invalidPageUser
         );
 
-        SummarizationRequest request =
-                request("request-10", user);
-
-        when(trackerApiClient.getDailyReportData(
-                FROM,
-                TO,
-                PAGE_SIZE,
-                null
-        )).thenReturn(page);
-
-        when(mapper.toRequest(period, user))
-                .thenReturn(request);
-
-        List<SummarizationRequest> receivedRequests =
-                new ArrayList<>();
-
-        requestSource.forEach(
-                FROM,
-                TO,
-                receivedRequests::add
+        verify(apiClient).getDailyReportData(
+                FROM, TO, PAGE_SIZE, null
         );
-
-        assertEquals(List.of(request), receivedRequests);
-
-        verify(trackerApiClient)
-                .getDailyReportData(
-                        FROM,
-                        TO,
-                        PAGE_SIZE,
-                        null
-                );
-
-        verify(mapper).toRequest(period, user);
-
-        verifyNoMoreInteractions(trackerApiClient, mapper);
+        verify(apiClient).getDailyReportData(
+                FROM, TO, PAGE_SIZE, 42L
+        );
+        verifyNoMoreInteractions(apiClient);
     }
 
     @Test
-    void shouldHandleEmptyPage() {
-        ReportPeriod period = period(FROM, TO);
+    void shouldRejectUnexpectedPeriodBeforeProcessingUsers() {
+        configurePageSize();
 
-        DailyReportDataPage emptyPage = page(
-                period,
-                List.of(),
+        DailyReportDataPage page = new DailyReportDataPage(
+                new ReportPeriod(FROM.minusSeconds(1), TO),
+                List.of(mock(UserReportData.class)),
                 null
         );
 
-        when(trackerApiClient.getDailyReportData(
-                FROM,
-                TO,
-                PAGE_SIZE,
-                null
-        )).thenReturn(emptyPage);
-
-        List<SummarizationRequest> receivedRequests =
-                new ArrayList<>();
-
-        requestSource.forEach(
-                FROM,
-                TO,
-                receivedRequests::add
-        );
-
-        assertTrue(receivedRequests.isEmpty());
-
-        verify(trackerApiClient)
-                .getDailyReportData(
-                        FROM,
-                        TO,
-                        PAGE_SIZE,
-                        null
-                );
-
-        verifyNoMoreInteractions(trackerApiClient);
-
-        verify(mapper, never())
-                .toRequest(
-                        org.mockito.ArgumentMatchers.any(),
-                        org.mockito.ArgumentMatchers.any()
-                );
-    }
-
-    @Test
-    void shouldRejectPageWithUnexpectedPeriod() {
-        Instant unexpectedFrom =
-                FROM.minusSeconds(60);
-
-        ReportPeriod unexpectedPeriod =
-                period(unexpectedFrom, TO);
-
-        DailyReportDataPage page = page(
-                unexpectedPeriod,
-                List.of(),
-                null
-        );
-
-        when(trackerApiClient.getDailyReportData(
-                FROM,
-                TO,
-                PAGE_SIZE,
-                null
+        when(apiClient.getDailyReportData(
+                FROM, TO, PAGE_SIZE, null
         )).thenReturn(page);
 
         TaskTrackerClientException exception = assertThrows(
                 TaskTrackerClientException.class,
-                () -> requestSource.forEach(
-                        FROM,
-                        TO,
-                        request -> {
-                        }
-                )
+                () -> source.forEach(FROM, TO, consumer)
         );
 
-        assertTrue(
-                exception.getMessage().contains("period"),
-                () -> "Unexpected exception message: "
-                        + exception.getMessage()
+        assertEquals(
+                "Task-tracker-backend returned a report page "
+                        + "for an unexpected period",
+                exception.getMessage()
         );
 
-        verify(mapper, never())
-                .toRequest(
-                        org.mockito.ArgumentMatchers.any(),
-                        org.mockito.ArgumentMatchers.any()
-                );
+        verifyNoInteractions(mapper, consumer);
     }
 
     @Test
-    void shouldRejectCursorThatDoesNotAdvance() {
-        ReportPeriod period = period(FROM, TO);
-
-        DailyReportDataPage firstPage = page(
-                period,
-                List.of(),
-                20L
-        );
-
-        DailyReportDataPage secondPage = page(
-                period,
-                List.of(),
-                20L
-        );
-
-        when(trackerApiClient.getDailyReportData(
-                FROM,
-                TO,
-                PAGE_SIZE,
-                null
-        )).thenReturn(firstPage);
-
-        when(trackerApiClient.getDailyReportData(
-                FROM,
-                TO,
-                PAGE_SIZE,
-                20L
-        )).thenReturn(secondPage);
+    void shouldRejectNullPage() {
+        configurePageSize();
 
         TaskTrackerClientException exception = assertThrows(
                 TaskTrackerClientException.class,
-                () -> requestSource.forEach(
-                        FROM,
-                        TO,
-                        request -> {
-                        }
-                )
+                () -> source.forEach(FROM, TO, consumer)
         );
 
-        assertTrue(
-                exception.getMessage().contains("cursor"),
-                () -> "Unexpected exception message: "
-                        + exception.getMessage()
+        assertEquals(
+                "Task-tracker-backend returned an invalid report page",
+                exception.getMessage()
         );
 
-        verify(trackerApiClient)
-                .getDailyReportData(
-                        FROM,
-                        TO,
-                        PAGE_SIZE,
-                        null
-                );
-
-        verify(trackerApiClient)
-                .getDailyReportData(
-                        FROM,
-                        TO,
-                        PAGE_SIZE,
-                        20L
-                );
-
-        verifyNoMoreInteractions(trackerApiClient);
-
-        verify(mapper, never())
-                .toRequest(
-                        org.mockito.ArgumentMatchers.any(),
-                        org.mockito.ArgumentMatchers.any()
-                );
+        verifyNoInteractions(mapper, consumer);
     }
 
     @Test
-    void shouldRejectCursorThatMovesBackwards() {
-        ReportPeriod period = period(FROM, TO);
-
-        DailyReportDataPage firstPage = page(
-                period,
-                List.of(),
-                20L
+    void shouldRejectInvalidInputPeriodBeforeCallingBackend() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> source.forEach(TO, FROM, consumer)
         );
 
-        DailyReportDataPage secondPage = page(
-                period,
-                List.of(),
-                10L
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> source.forEach(FROM, FROM, consumer)
         );
 
-        when(trackerApiClient.getDailyReportData(
-                FROM,
-                TO,
-                PAGE_SIZE,
-                null
-        )).thenReturn(firstPage);
-
-        when(trackerApiClient.getDailyReportData(
-                FROM,
-                TO,
-                PAGE_SIZE,
-                20L
-        )).thenReturn(secondPage);
-
-        TaskTrackerClientException exception = assertThrows(
-                TaskTrackerClientException.class,
-                () -> requestSource.forEach(
-                        FROM,
-                        TO,
-                        request -> {
-                        }
-                )
-        );
-
-        assertTrue(
-                exception.getMessage().contains("cursor"),
-                () -> "Unexpected exception message: "
-                        + exception.getMessage()
-        );
-
-        verify(mapper, never())
-                .toRequest(
-                        org.mockito.ArgumentMatchers.any(),
-                        org.mockito.ArgumentMatchers.any()
-                );
-    }
-
-    @Test
-    void shouldPropagateTrackerApiClientException() {
-        TaskTrackerClientException clientException =
-                new TaskTrackerClientException(
-                        "Backend is unavailable"
-                );
-
-        when(trackerApiClient.getDailyReportData(
-                FROM,
-                TO,
-                PAGE_SIZE,
-                null
-        )).thenThrow(clientException);
-
-        TaskTrackerClientException actualException = assertThrows(
-                TaskTrackerClientException.class,
-                () -> requestSource.forEach(
-                        FROM,
-                        TO,
-                        request -> {
-                        }
-                )
-        );
-
-        assertEquals(clientException, actualException);
-
-        verify(mapper, never())
-                .toRequest(
-                        org.mockito.ArgumentMatchers.any(),
-                        org.mockito.ArgumentMatchers.any()
-                );
-    }
-
-    private static DailyReportDataPage page(
-            ReportPeriod period,
-            List<UserReportData> items,
-            Long nextAfterUserId
-    ) {
-        return new DailyReportDataPage(
-                period,
-                items,
-                nextAfterUserId
+        verifyNoInteractions(
+                apiClient,
+                properties,
+                mapper,
+                consumer
         );
     }
 
-    private static ReportPeriod period(
-            Instant from,
-            Instant to
-    ) {
-        return new ReportPeriod(from, to);
+    private void configurePageSize() {
+        when(properties.getDailyReportDataPageSize())
+                .thenReturn(PAGE_SIZE);
     }
 
-    private static UserReportData user(
-            Long userId,
-            String email
-    ) {
-        return new UserReportData(
-                userId,
-                email,
-                List.of(),
-                List.of()
-        );
-    }
-
-    private static SummarizationRequest request(
-            String requestId,
-            UserReportData user
-    ) {
+    private SummarizationRequest createRequest(String requestId) {
         return SummarizationRequest.builder()
                 .requestId(requestId)
-                .userId(user.getUserId())
-                .userEmail(user.getUserEmail())
-                .periodStart(
-                        LocalDateTime.ofInstant(
-                                FROM,
-                                ZoneOffset.UTC
-                        )
-                )
-                .periodEnd(
-                        LocalDateTime.ofInstant(
-                                TO,
-                                ZoneOffset.UTC
-                        )
-                )
-                .tasks(
-                        List.of(
-                                TaskSummaryDto.builder()
-                                        .id(1L)
-                                        .title("Test task")
-                                        .completed(false)
-                                        .build()
-                        )
-                )
-                .replyTopic("SUMMARIZATION_RESPONSES")
                 .build();
     }
 }

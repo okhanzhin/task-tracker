@@ -26,27 +26,40 @@ public class DailyReportRequestSource {
     private final SummarizationRequestMapper summarizationRequestMapper;
 
     public void forEach(Instant from, Instant to, Consumer<SummarizationRequest> requestConsumer) {
+
         Objects.requireNonNull(from, "from must not be null");
         Objects.requireNonNull(to, "to must not be null");
         Objects.requireNonNull(requestConsumer, "requestConsumer must not be null");
 
+        if (!from.isBefore(to)) {
+            throw new IllegalArgumentException("from must be before to");
+        }
+
+        int pageSize = taskTrackerClientProperties.getDailyReportDataPageSize();
+
         Long afterUserId = null;
 
         do {
-            DailyReportDataPage page = taskTrackerClient
-                    .getDailyReportData(from, to, taskTrackerClientProperties.getDailyReportDataPageSize(), afterUserId);
+            DailyReportDataPage page =
+                    taskTrackerClient.getDailyReportData(
+                            from,
+                            to,
+                            pageSize,
+                            afterUserId
+                    );
 
             validatePage(page, from, to);
+            Long nextAfterUserId = page.getNextAfterUserId();
+            validateCursor(afterUserId, nextAfterUserId);
 
             page.getItems().stream()
-                    .map(item -> summarizationRequestMapper.toRequest(page.getPeriod(), item))
+                    .map(item ->
+                            summarizationRequestMapper.toRequest(
+                                    page.getPeriod(),
+                                    item
+                            )
+                    )
                     .forEach(requestConsumer);
-
-            Long nextAfterUserId = page.getNextAfterUserId();
-
-            if (nextAfterUserId != null && afterUserId != null && nextAfterUserId <= afterUserId) {
-                throw new TaskTrackerClientException("Task-tracker-backend returned a non-advancing report cursor");
-            }
 
             afterUserId = nextAfterUserId;
         } while (afterUserId != null);
@@ -59,10 +72,19 @@ public class DailyReportRequestSource {
             );
         }
 
-        if (!from.equals(page.getPeriod().getFrom())
-                || !to.equals(page.getPeriod().getTo())) {
+        if (!from.equals(page.getPeriod().getFrom()) || !to.equals(page.getPeriod().getTo())) {
             throw new TaskTrackerClientException(
-                    "Task-tracker-backend returned a report page for an unexpected period"
+                    "Task-tracker-backend returned a report page "
+                            + "for an unexpected period"
+            );
+        }
+    }
+
+    private void validateCursor(Long currentCursor, Long nextCursor) {
+        if (currentCursor != null && nextCursor != null && nextCursor <= currentCursor) {
+            throw new TaskTrackerClientException(
+                    "Task-tracker-backend returned "
+                            + "a non-advancing report cursor"
             );
         }
     }
