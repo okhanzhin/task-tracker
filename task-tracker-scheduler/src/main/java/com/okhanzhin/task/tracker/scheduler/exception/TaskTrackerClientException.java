@@ -1,0 +1,32 @@
+package com.okhanzhin.task.tracker.scheduler.exception;
+
+import lombok.Getter;
+
+/**
+ *
+ * @author okhanzhin on 09.10.2026
+ */
+@Getter
+public class TaskTrackerClientException extends RuntimeException {
+
+    private final Integer status;
+    private final String responseBody;
+
+    public TaskTrackerClientException(int status, String responseBody) {
+        super("Task-tracker-backend client error: status=" + status + ", body=" + responseBody);
+        this.status = status;
+        this.responseBody = responseBody;
+    }
+
+    public TaskTrackerClientException(String message) {
+        super(message);
+        this.status = null;
+        this.responseBody = null;
+    }
+
+    public TaskTrackerClientException(String message, Throwable cause) {
+        super(message, cause);
+        this.status = null;
+        this.responseBody = null;
+    }
+}

@@ -1,6 +1,6 @@
 package com.okhanzhin.summarization.service.service;
 
-import com.okhanzhin.task.tracker.common.model.request.SummarizationRequest;
+import com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationRequest;
 
 /**
  *

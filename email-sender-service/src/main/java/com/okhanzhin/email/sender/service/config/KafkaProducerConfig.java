@@ -1,6 +1,6 @@
 package com.okhanzhin.email.sender.service.config;
 
-import com.okhanzhin.task.tracker.common.model.EmailSendingTask;
+import com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,11 +14,13 @@ import java.util.Map;
  *
  * @author okhanzhin on 22.09.2026
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class KafkaProducerConfig {
 
     @Bean
-    public ProducerFactory<String, EmailSendingTask> emailSendingTaskProducerFactory(KafkaProperties kafkaProperties) {
+    public ProducerFactory<String, EmailSendingTask> emailSendingTaskProducerFactory(
+            KafkaProperties kafkaProperties
+    ) {
         Map<String, Object> config = kafkaProperties.buildProducerProperties();
 
         return new DefaultKafkaProducerFactory<>(config);

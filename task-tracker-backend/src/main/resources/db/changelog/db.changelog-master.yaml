@@ -31,3 +31,10 @@ databaseChangeLog:
         - sqlFile:
             comment: create tasks table
             path: db/changelog/sql/004-create-tasks-table.sql
+  - changeSet:
+      id: 005-create-tasks-owner-id-index
+      author: okhanzhin
+      changes:
+        - sqlFile:
+            comment: create tasks owner id index
+            path: db/changelog/sql/005-create-tasks-owner-id-index.sql

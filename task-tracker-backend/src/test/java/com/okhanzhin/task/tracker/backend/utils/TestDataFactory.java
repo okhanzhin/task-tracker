@@ -5,8 +5,14 @@ import com.okhanzhin.task.tracker.backend.model.entity.TaskDAO;
 import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
 import com.okhanzhin.task.tracker.backend.repository.TaskRepository;
 import com.okhanzhin.task.tracker.backend.repository.UserRepository;
+import com.okhanzhin.task.tracker.common.model.report.DailyReportDataPage;
+import com.okhanzhin.task.tracker.common.model.report.TaskData;
+import com.okhanzhin.task.tracker.common.model.report.UserReportData;
 import lombok.experimental.UtilityClass;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.Instant;
+import java.util.List;
 
 /**
  *
@@ -57,12 +63,41 @@ public class TestDataFactory {
             UserDAO owner,
             TaskRepository taskRepository
     ) {
+        return savedTask(
+                title,
+                description,
+                completed ? Instant.now() : null,
+                owner,
+                taskRepository
+        );
+    }
+
+    public static TaskDAO savedTask(
+            String title,
+            String description,
+            Instant completedAt,
+            UserDAO owner,
+            TaskRepository taskRepository
+    ) {
         TaskDAO task = new TaskDAO();
         task.setTitle(title);
         task.setDescription(description);
-        task.setCompleted(completed);
         task.setOwner(owner);
+        task.setCompleted(completedAt != null);
+        task.setCompletedAt(completedAt);
 
-        return taskRepository.save(task);
+        return taskRepository.saveAndFlush(task);
+    }
+
+    public static List<Long> userIds(DailyReportDataPage page) {
+        return page.getItems().stream()
+                .map(UserReportData::getUserId)
+                .toList();
+    }
+
+    public static List<Long> taskIds(List<TaskData> tasks) {
+        return tasks.stream()
+                .map(TaskData::getTaskId)
+                .toList();
     }
 }

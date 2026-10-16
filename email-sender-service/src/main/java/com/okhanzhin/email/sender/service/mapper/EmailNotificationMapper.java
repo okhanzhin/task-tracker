@@ -1,7 +1,7 @@
 package com.okhanzhin.email.sender.service.mapper;
 
 import com.okhanzhin.email.sender.service.model.EmailNotification;
-import com.okhanzhin.task.tracker.common.model.EmailSendingTask;
+import com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask;
 import org.springframework.stereotype.Component;
 
 /**

@@ -7,17 +7,22 @@ import com.okhanzhin.task.tracker.backend.utils.TestDataFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import static com.okhanzhin.task.tracker.backend.utils.TestConstants.BASE_TASK_URL;
 import static com.okhanzhin.task.tracker.backend.utils.TestConstants.DESCRIPTION;
 import static com.okhanzhin.task.tracker.backend.utils.TestConstants.EMAIL;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.FROM;
 import static com.okhanzhin.task.tracker.backend.utils.TestConstants.GET_USER_URL;
 import static com.okhanzhin.task.tracker.backend.utils.TestConstants.LOGIN_URL;
 import static com.okhanzhin.task.tracker.backend.utils.TestConstants.PASSWORD;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.REPORT_URL;
 import static com.okhanzhin.task.tracker.backend.utils.TestConstants.TIMEZONE;
 import static com.okhanzhin.task.tracker.backend.utils.TestConstants.TITLE;
+import static com.okhanzhin.task.tracker.backend.utils.TestConstants.TO;
 import static com.okhanzhin.task.tracker.backend.utils.TestConstants.USERNAME;
 import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,7 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthenticationTest extends IntegrationTest {
 
     @Test
-    void shouldAuthenticateExistingUserAndReturnJwt() throws Exception {
+    void shouldAuthenticateExistingUserAndReturnJwt()
+            throws Exception {
         TestDataFactory.savedUser(
                 USERNAME,
                 EMAIL,
@@ -42,7 +48,8 @@ public class AuthenticationTest extends IntegrationTest {
                 passwordEncoder
         );
 
-        AuthenticationRequest request = new AuthenticationRequest(EMAIL, PASSWORD);
+        AuthenticationRequest request =
+                new AuthenticationRequest(EMAIL, PASSWORD);
 
         mockMvc.perform(post(LOGIN_URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -56,7 +63,8 @@ public class AuthenticationTest extends IntegrationTest {
     }
 
     @Test
-    void shouldReturnUnauthorizedWhenPasswordIsIncorrect() throws Exception {
+    void shouldReturnUnauthorizedWhenPasswordIsIncorrect()
+            throws Exception {
         TestDataFactory.savedUser(
                 USERNAME,
                 EMAIL,
@@ -66,29 +74,41 @@ public class AuthenticationTest extends IntegrationTest {
                 passwordEncoder
         );
 
-        AuthenticationRequest request = new AuthenticationRequest(EMAIL, "wrongPassword123");
+        AuthenticationRequest request = new AuthenticationRequest(
+                EMAIL,
+                "wrongPassword123"
+        );
 
         mockMvc.perform(post(LOGIN_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(header().doesNotExist(HttpHeaders.AUTHORIZATION))
+                .andExpect(header().doesNotExist(
+                        HttpHeaders.AUTHORIZATION
+                ))
                 .andExpect(jsonPath("$.message").isNotEmpty());
     }
 
     @Test
-    void shouldReturnUnauthorizedWhenEmailDoesNotExist() throws Exception {
-        AuthenticationRequest request = new AuthenticationRequest("unknown@example.com", PASSWORD);
+    void shouldReturnUnauthorizedWhenEmailDoesNotExist()
+            throws Exception {
+        AuthenticationRequest request = new AuthenticationRequest(
+                "unknown@example.com",
+                PASSWORD
+        );
 
         mockMvc.perform(post(LOGIN_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized())
-                .andExpect(header().doesNotExist(HttpHeaders.AUTHORIZATION));
+                .andExpect(header().doesNotExist(
+                        HttpHeaders.AUTHORIZATION
+                ));
     }
 
     @Test
-    void shouldReturnCurrentUserUsingTokenIssuedOnAuthentication() throws Exception {
+    void shouldReturnCurrentUserUsingTokenIssuedOnAuthentication()
+            throws Exception {
         TestDataFactory.savedUser(
                 USERNAME,
                 EMAIL,
@@ -98,16 +118,7 @@ public class AuthenticationTest extends IntegrationTest {
                 passwordEncoder
         );
 
-        AuthenticationRequest request = new AuthenticationRequest(EMAIL, PASSWORD);
-
-        var authenticationResponse = mockMvc.perform(post(LOGIN_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse();
-
-        String token = authenticationResponse.getHeader(HttpHeaders.AUTHORIZATION);
+        String token = getUserToken(EMAIL, PASSWORD);
 
         mockMvc.perform(get(GET_USER_URL)
                         .header(HttpHeaders.AUTHORIZATION, token))
@@ -118,21 +129,26 @@ public class AuthenticationTest extends IntegrationTest {
     @Test
     void shouldReturnUnauthorizedWhenAuthorizationHeaderIsMissing()
             throws Exception {
-
         mockMvc.perform(get(GET_USER_URL))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void shouldReturnUnauthorizedWhenJwtIsMalformed() throws Exception {
-        mockMvc.perform(get(LOGIN_URL)
-                        .header(HttpHeaders.AUTHORIZATION, "Bearer not-a-valid-jwt"))
+    void shouldReturnUnauthorizedWhenJwtIsMalformed()
+            throws Exception {
+        mockMvc.perform(get(GET_USER_URL)
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer not-a-valid-jwt"
+                        ))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void shouldReturnUnauthorizedWhenCreatingTaskWithoutToken() throws Exception {
-        var request = new CreateTaskRequest(TITLE, DESCRIPTION, false);
+    void shouldReturnUnauthorizedWhenCreatingTaskWithoutToken()
+            throws Exception {
+        CreateTaskRequest request =
+                new CreateTaskRequest(TITLE, DESCRIPTION, false);
 
         mockMvc.perform(post(BASE_TASK_URL)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -141,5 +157,87 @@ public class AuthenticationTest extends IntegrationTest {
                 .andExpect(status().isUnauthorized());
 
         assertTrue(taskRepository.findAll().isEmpty());
+    }
+
+    @Test
+    void shouldAuthenticateInternalServiceUsingSchedulerToken()
+            throws Exception {
+        String token = jwtService.generateSchedulerToken();
+
+        mockMvc.perform(internalReportRequest()
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer " + token
+                        ))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldRejectInternalServiceRequestWithoutToken()
+            throws Exception {
+        mockMvc.perform(internalReportRequest())
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldRejectInternalServiceRequestWithInvalidToken()
+            throws Exception {
+        mockMvc.perform(internalReportRequest()
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                "Bearer invalid-token"
+                        ))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldForbidInternalReportAccessWithRegularUserToken()
+            throws Exception {
+        TestDataFactory.savedUser(
+                USERNAME,
+                EMAIL,
+                PASSWORD,
+                TIMEZONE,
+                userRepository,
+                passwordEncoder
+        );
+
+        String token = getUserToken(EMAIL, PASSWORD);
+
+        mockMvc.perform(internalReportRequest()
+                        .header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isForbidden());
+    }
+
+    private MockHttpServletRequestBuilder internalReportRequest() {
+        return get(REPORT_URL)
+                .param("from", FROM.toString())
+                .param("to", TO.toString())
+                .accept(MediaType.APPLICATION_JSON);
+    }
+
+    private String getUserToken(
+            String email,
+            String password
+    ) throws Exception {
+        AuthenticationRequest request =
+                new AuthenticationRequest(email, password);
+
+        String token = mockMvc.perform(post(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(header().exists(HttpHeaders.AUTHORIZATION))
+                .andExpect(header().string(
+                        HttpHeaders.AUTHORIZATION,
+                        startsWith("Bearer ")
+                ))
+                .andReturn()
+                .getResponse()
+                .getHeader(HttpHeaders.AUTHORIZATION);
+
+        assertNotNull(token);
+
+        return token;
     }
 }

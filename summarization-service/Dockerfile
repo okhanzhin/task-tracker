@@ -8,6 +8,7 @@ COPY pom.xml .
 
 COPY task-tracker-common/pom.xml task-tracker-common/pom.xml
 COPY task-tracker-backend/pom.xml task-tracker-backend/pom.xml
+COPY task-tracker-scheduler/pom.xml task-tracker-scheduler/pom.xml
 COPY email-sender-service/pom.xml email-sender-service/pom.xml
 COPY summarization-service/pom.xml summarization-service/pom.xml
 

@@ -1,0 +1,68 @@
+server:
+  port: ${APP_PORT:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+spring:
+  application:
+    name: task-tracker-scheduler
+  profiles:
+    active: default
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:task-tracker-scheduler}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.use.type.headers: false
+        spring.json.value.default.type: com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationResponse
+        spring.json.trusted.packages: com.okhanzhin.task.tracker.common.model.messaging.summarization
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        spring.json.add.type.headers: false
+    listener:
+      ack-mode: record
+      concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
+
+app:
+  reports:
+    daily:
+      cron: ${DAILY_REPORT_CRON:0 0 0 * * *}
+      zone: ${DAILY_REPORT_ZONE:UTC}
+  kafka:
+    topics:
+      email-sending: ${EMAIL_SENDING_KAFKA_TOPIC:EMAIL_SENDING_TASKS}
+      summarization-request: ${SUMMARIZATION_REQUEST_KAFKA_TOPIC:SUMMARIZATION_REQUESTS}
+      summarization-response: ${SUMMARIZATION_RESPONSE_KAFKA_TOPIC:SUMMARIZATION_RESPONSES}
+      partitions: ${KAFKA_TOPIC_PARTITIONS:3}
+      replicas: ${KAFKA_TOPIC_REPLICAS:1}
+    retry:
+      max-retries: ${KAFKA_EMAIL_MAX_RETRIES:3}
+      initial-interval-ms: ${KAFKA_EMAIL_RETRY_INITIAL_INTERVAL_MS:1000}
+      multiplier: ${KAFKA_EMAIL_RETRY_MULTIPLIER:2.0}
+      max-interval-ms: ${KAFKA_EMAIL_RETRY_MAX_INTERVAL_MS:4000}
+    rpc:
+      response-timeout: ${SUMMARIZATION_RESPONSE_TIMEOUT:30s}
+
+clients:
+  task-tracker-api:
+    base-url: ${TASK_TRACKER_BACKEND_URL:http://localhost:8080}
+    daily-report-data-path: ${TASK_TRACKER_DAILY_REPORT_DATA_PATH:/internal/v1/reports/daily-data}
+    daily-report-data-page-size: ${TASK_TRACKER_DAILY_REPORT_DATA_PAGE_SIZE:100}
+    service-token: ${SCHEDULER_SERVICE_TOKEN}
+    connect-timeout: ${TASK_TRACKER_CONNECT_TIMEOUT:5s}
+    read-timeout: ${TASK_TRACKER_READ_TIMEOUT:5s}

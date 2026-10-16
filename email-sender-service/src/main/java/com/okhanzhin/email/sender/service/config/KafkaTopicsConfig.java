@@ -28,7 +28,7 @@ public class KafkaTopicsConfig {
     }
 
     @Bean
-    public NewTopic emailSendingTasksDtlTopic() {
+    public NewTopic emailSendingTasksDltTopic() {
         AppKafkaProperties.Topics topics = appKafkaProperties.getTopics();
 
         return TopicBuilder.name(topics.getEmailSendingDlt())

@@ -8,8 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
 
@@ -45,6 +47,36 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(
                         ErrorMessage.AUTHENTICATION_FAILED.getMessage(),
                         List.of(exception.getMessage())
+                ));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestParameter(
+            MissingServletRequestParameterException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(
+                        ErrorMessage.VALIDATION_FAILED.getMessage(),
+                        List.of(
+                                "Required query parameter is missing: "
+                                        + exception.getParameterName()
+                        )
+                ));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleArgumentTypeMismatch(
+            MethodArgumentTypeMismatchException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(
+                        ErrorMessage.VALIDATION_FAILED.getMessage(),
+                        List.of(
+                                "Invalid format for query parameter: "
+                                        + exception.getName()
+                        )
                 ));
     }
 
