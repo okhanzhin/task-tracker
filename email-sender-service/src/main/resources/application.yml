@@ -1,14 +1,18 @@
 server:
   port: ${APP_PORT:8081}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
 spring:
   application:
     name: email-sender-service
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info
   profiles:
     active: default
   mail:

@@ -1,14 +1,18 @@
 server:
   port: ${APP_PORT:8083}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
 spring:
   application:
     name: task-tracker-scheduler
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info
   profiles:
     active: default
   kafka:
@@ -37,8 +41,8 @@ spring:
 app:
   reports:
     daily:
-      cron: "${DAILY_REPORT_CRON:0 0 0 * * *}"
-      zone: "${DAILY_REPORT_ZONE:UTC}"
+      cron: ${DAILY_REPORT_CRON:0 0 0 * * *}
+      zone: ${DAILY_REPORT_ZONE:UTC}
   kafka:
     topics:
       email-sending: ${EMAIL_SENDING_KAFKA_TOPIC:EMAIL_SENDING_TASKS}

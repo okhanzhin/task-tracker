@@ -1,16 +1,20 @@
 server:
   port: ${APP_PORT:8080}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
 spring:
   main:
     allow-bean-definition-overriding: true
   application:
     name: task-tracker-backend
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info
   profiles:
     active: default
   datasource:
