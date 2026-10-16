@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -23,20 +24,37 @@ public class SummarizationRequestProducer {
     private final AppKafkaProperties kafkaProperties;
 
     public CompletableFuture<SummarizationResponse> send(SummarizationRequest request) {
-        CompletableFuture<SummarizationResponse> responseFuture = registry.register(request.getRequestId());
+        Objects.requireNonNull(
+                request,
+                "request must not be null"
+        );
+        Objects.requireNonNull(
+                request.getUserId(),
+                "userId must not be null"
+        );
 
-        String topic = kafkaProperties.getTopics().getSummarizationRequest();
+        String topic = kafkaProperties.getTopics()
+                .getSummarizationRequest();
         String key = request.getUserId().toString();
 
-        kafkaTemplate
-                .send(topic, key, request)
-                .whenComplete((result, exception) -> {
-                    if (exception == null) {
-                        return;
-                    }
+        CompletableFuture<SummarizationResponse> responseFuture = registry.register(request.getRequestId());
 
-                    registry.completeExceptionally(request.getRequestId(), exception);
-                });
+        try {
+            kafkaTemplate.send(topic, key, request)
+                    .whenComplete((result, exception) -> {
+                        if (exception != null) {
+                            registry.completeExceptionally(
+                                    request.getRequestId(),
+                                    exception
+                            );
+                        }
+                    });
+        } catch (RuntimeException exception) {
+            registry.completeExceptionally(
+                    request.getRequestId(),
+                    exception
+            );
+        }
 
         return responseFuture;
     }
