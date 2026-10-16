@@ -4,7 +4,11 @@ import com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask;
 import com.okhanzhin.task.tracker.scheduler.config.properties.AppKafkaProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
+
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 /**
  *
@@ -17,8 +21,13 @@ public class EmailTaskProducer {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final AppKafkaProperties appKafkaProperties;
 
-    public void send(EmailSendingTask emailSendingTask) {
-        kafkaTemplate.send(
+    public CompletableFuture<SendResult<String, Object>> send(EmailSendingTask emailSendingTask) {
+        Objects.requireNonNull(
+                emailSendingTask,
+                "emailSendingTask must not be null"
+        );
+
+        return kafkaTemplate.send(
                 appKafkaProperties.getTopics().getEmailSending(),
                 emailSendingTask.getRecipientEmail(),
                 emailSendingTask

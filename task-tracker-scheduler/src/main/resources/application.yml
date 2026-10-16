@@ -35,6 +35,10 @@ spring:
       concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
 
 app:
+  reports:
+    daily:
+      cron: "${DAILY_REPORT_CRON:0 0 0 * * *}"
+      zone: "${DAILY_REPORT_ZONE:UTC}"
   kafka:
     topics:
       email-sending: ${EMAIL_SENDING_KAFKA_TOPIC:EMAIL_SENDING_TASKS}
