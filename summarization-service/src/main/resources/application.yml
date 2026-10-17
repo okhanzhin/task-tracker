@@ -21,10 +21,12 @@ spring:
         group-id: ${KAFKA_CONSUMER_GROUP_ID:task-tracker-summarization}
         auto-offset-reset: earliest
         enable-auto-commit: false
+        max-poll-records: 1
         key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
         value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
         properties:
           spring.json.use.type.headers: false
+          max.poll.interval.ms: 300000
           spring.json.value.default.type: com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationRequest
           spring.json.trusted.packages: com.okhanzhin.task.tracker.common.model.messaging.summarization
       producer:
@@ -36,7 +38,7 @@ spring:
           spring.json.add.type.headers: false
       listener:
         ack-mode: record
-        concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
+        concurrency: ${KAFKA_LISTENER_CONCURRENCY:1}
 
 app:
     kafka:
@@ -51,3 +53,12 @@ app:
           initial-interval-ms: ${KAFKA_RETRY_INITIAL_INTERVAL_MS:1000}
           multiplier: ${KAFKA_RETRY_MULTIPLIER:2.0}
           max-interval-ms: ${KAFKA_RETRY_MAX_INTERVAL_MS:10000}
+    gigachat:
+      auth-base-url: https://ngw.devices.sberbank.ru:9443
+      api-base-url: https://api.giga.chat
+      authorization-key: ${GIGACHAT_AUTHORIZATION_KEY:}
+      scope: ${GIGACHAT_SCOPE:GIGACHAT_API_PERS}
+      model: ${GIGACHAT_MODEL:GigaChat-2}
+      connect-timeout: 5s
+      read-timeout: 60s
+      token-refresh-margin: 2m

@@ -1,8 +1,11 @@
 package com.okhanzhin.summarization.service.service.impl;
 
+import com.okhanzhin.summarization.service.client.GigaChatClient;
+import com.okhanzhin.summarization.service.service.ReportPromptBuilder;
 import com.okhanzhin.summarization.service.service.SummaryGeneratorService;
 import com.okhanzhin.task.tracker.common.model.messaging.summarization.SummarizationRequest;
 import com.okhanzhin.task.tracker.common.model.messaging.summarization.TaskSummaryDto;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -14,41 +17,24 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class SummaryGeneratorServiceImpl implements SummaryGeneratorService {
+
+    private final ReportPromptBuilder promptBuilder;
+    private final GigaChatClient gigaChatClient;
 
     @Override
     public String generate(SummarizationRequest request) {
-        List<TaskSummaryDto> tasks = request.getTasks();
+        String userPrompt = promptBuilder.buildUserPrompt(request);
+        String systemPrompt = promptBuilder.buildSystemPrompt();
 
-        long completedCount = tasks.stream()
-                .filter(TaskSummaryDto::isCompleted)
-                .count();
-        long uncompletedCount = tasks.stream()
-                .filter(taskSummaryDto -> !taskSummaryDto.isCompleted())
-                .count();
-
-        String summary = """
-        Your task report for %s — %s.
-
-        You completed %d task(s).
-        You still have %d incomplete task(s).
-        Total tasks included in this report: %d.
-
-        Keep up the great work!
-        """.formatted(
-                request.getPeriodStart(),
-                request.getPeriodEnd(),
-                completedCount,
-                uncompletedCount,
-                tasks.size()
-        );
+        String summary = gigaChatClient.generate(systemPrompt, userPrompt);
 
         log.info(
-                "Generated stub summary: requestId={}, userId={}, completed={}, uncompleted={}",
+                "Generated daily summary: requestId={}, userId={}, taskCount={}",
                 request.getRequestId(),
                 request.getUserId(),
-                completedCount,
-                uncompletedCount
+                request.getTasks().size()
         );
 
         return summary;

@@ -56,7 +56,7 @@ app:
       multiplier: ${KAFKA_EMAIL_RETRY_MULTIPLIER:2.0}
       max-interval-ms: ${KAFKA_EMAIL_RETRY_MAX_INTERVAL_MS:4000}
     rpc:
-      response-timeout: ${SUMMARIZATION_RESPONSE_TIMEOUT:30s}
+      response-timeout: ${SUMMARIZATION_RESPONSE_TIMEOUT:180s}
 
 clients:
   task-tracker-api:
