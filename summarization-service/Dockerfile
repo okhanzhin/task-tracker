@@ -19,6 +19,16 @@ COPY summarization-service/src summarization-service/src
 
 RUN ./mvnw -B -pl summarization-service -am package -DskipTests
 
+COPY docker/certificates/russian-trusted-root-ca.pem /tmp/russian-trusted-root-ca.pem
+
+RUN cp "$JAVA_HOME/lib/security/cacerts" /tmp/gigachat-cacerts \
+    && keytool -importcert \
+        -noprompt \
+        -alias gigachat-russian-root-ca \
+        -file /tmp/russian-trusted-root-ca.pem \
+        -keystore /tmp/gigachat-cacerts \
+        -storepass changeit
+
 FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
@@ -26,6 +36,12 @@ WORKDIR /app
 RUN adduser --system app-user
 
 COPY --from=builder /app/summarization-service/target/*.jar app.jar
+
+COPY --from=builder /tmp/gigachat-cacerts /app/gigachat-cacerts
+
+RUN chmod 644 /app/gigachat-cacerts
+
+ENV JAVA_TOOL_OPTIONS="-Djavax.net.ssl.trustStore=/app/gigachat-cacerts -Djavax.net.ssl.trustStorePassword=changeit"
 
 USER app-user
 

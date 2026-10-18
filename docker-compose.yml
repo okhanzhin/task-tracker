@@ -146,6 +146,11 @@ services:
         GIGACHAT_AUTHORIZATION_KEY: ${GIGACHAT_AUTHORIZATION_KEY}
         GIGACHAT_SCOPE: ${GIGACHAT_SCOPE}
         GIGACHAT_MODEL: ${GIGACHAT_MODEL}
+
+        JAVA_TOOL_OPTIONS: >-
+          -Djavax.net.ssl.trustStore=/app/gigachat-cacerts
+          -Djavax.net.ssl.trustStorePassword=changeit
+          -Djavax.net.debug=ssl,handshake,trustmanager
       depends_on:
         kafka:
           condition: service_healthy
