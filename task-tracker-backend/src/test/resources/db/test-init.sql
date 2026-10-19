@@ -1,0 +1,2 @@
+CREATE SCHEMA IF NOT EXISTS tasks_liquibase;
+CREATE SCHEMA IF NOT EXISTS task_tracker;

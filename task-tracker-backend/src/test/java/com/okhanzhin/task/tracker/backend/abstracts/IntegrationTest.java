@@ -13,7 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import static com.okhanzhin.task.tracker.backend.utils.TestConstants.DATABASE_NAME;
@@ -25,7 +26,6 @@ import static com.okhanzhin.task.tracker.backend.utils.TestConstants.IMAGE_NAME;
  *
  * @author okhanzhin on 08.09.2026
  */
-@Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -35,7 +35,27 @@ public abstract class IntegrationTest {
             new PostgreSQLContainer<>(IMAGE_NAME)
                     .withDatabaseName(DATABASE_NAME)
                     .withUsername(DB_USER)
-                    .withPassword(DB_PASSWORD);
+                    .withPassword(DB_PASSWORD)
+                    .withInitScript("db/test-init.sql");
+
+    static {
+        POSTGRES.start();
+    }
+
+    @DynamicPropertySource
+    static void registerDatabaseProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
+
+        registry.add("spring.datasource.hikari.schema", () -> "task_tracker");
+        registry.add("spring.jpa.properties.hibernate.default_schema",
+                () -> "task_tracker");
+
+        registry.add("spring.liquibase.default-schema", () -> "task_tracker");
+        registry.add("spring.liquibase.liquibase-schema",
+                () -> "tasks_liquibase");
+    }
 
     @Autowired
     protected MockMvc mockMvc;
