@@ -1,6 +1,7 @@
 package com.okhanzhin.task.tracker.backend.model.dto.request;
 
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,6 +17,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateTaskRequest {
 
+    @NotBlank(message = "Title must not be blank")
     @Size(max = 255, message = "Title must not exceed 255 characters")
     private String title;
 
@@ -23,9 +25,4 @@ public class CreateTaskRequest {
     private String description;
 
     private Boolean completed;
-
-    @AssertTrue(message = "Title must not be blank")
-    public boolean isTitleValid() {
-        return title == null || !title.isBlank();
-    }
 }

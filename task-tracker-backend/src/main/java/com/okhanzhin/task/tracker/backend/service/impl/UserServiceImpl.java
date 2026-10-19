@@ -49,6 +49,8 @@ public class UserServiceImpl implements UserService {
             if (hasConstraint(e, Constants.UK_USERS_EMAIL)) {
                 throw new EmailAlreadyRegisteredException();
             }
+
+            throw e;
         }
         emailTaskProducer.send(EmailSendingTask.builder()
                 .messageId(UUID.randomUUID())
