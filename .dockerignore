@@ -1,0 +1,21 @@
+# Git
+.git
+.gitignore
+
+# IDE
+**/.idea
+**/.vscode
+**/*.iml
+
+# Local build artifacts
+**/target
+
+# Environment files
+**/.env
+**/.env.*
+!**/.env.example
+
+# Logs and OS files
+**/*.log
+**/.DS_Store
+**/Thumbs.db
