@@ -1,0 +1,161 @@
+services:
+    postgresql:
+        image: postgres:16.4
+        container_name: postgresql
+        ports:
+        - '5432:5432'
+        restart: always
+        environment:
+          POSTGRES_USER: ${PG_USERNAME}
+          POSTGRES_PASSWORD: ${PG_PASSWORD}
+          POSTGRES_DB: tasks-db
+          LIQUIBASE_SCHEMA: ${LIQUIBASE_SCHEMA:-tasks_liquibase}
+        volumes:
+        - postgres_db:/var/lib/postgresql/data
+        - ./postgres/init/01-create-liquibase-schema.sql:/docker-entrypoint-initdb.d/01-create-liquibase-schema.sql:ro
+        healthcheck:
+          test: [ "CMD-SHELL", "pg_isready -U ${PG_USERNAME}" ]
+          interval: 20s
+          timeout: 5s
+          retries: 3
+        networks:
+        - task-tracker
+
+    kafka:
+        image: confluentinc/cp-kafka:7.5.0
+        container_name: kafka
+        hostname: kafka
+        restart: on-failure
+        ports:
+        - '9092:9092'
+        environment:
+          CLUSTER_ID: ${KAFKA_CLUSTER_ID}
+
+          KAFKA_NODE_ID: 1
+          KAFKA_PROCESS_ROLES: "broker,controller"
+
+          KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:29093
+          KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+
+          KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+          KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: false
+
+          KAFKA_TOPIC: EMAIL_SENDING_TASKS
+        healthcheck:
+          test:
+            [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:29092 --list >/dev/null 2>&1" ]
+          interval: 10s
+          timeout: 10s
+          retries: 12
+          start_period: 30s
+        volumes:
+          - kafka_data:/var/lib/kafka/data
+        networks:
+        - task-tracker
+
+    task-tracker-backend:
+        image: "${DOCKERHUB_USERNAME:?Set DOCKERHUB_USERNAME}/task-tracker-backend:${IMAGE_TAG:?Set IMAGE_TAG}"
+        platform: linux/amd64
+        container_name: task-tracker-backend
+        restart: on-failure
+        ports:
+        - '8080:8080'
+        environment:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/${POSTGRES_DB}
+          SPRING_DATASOURCE_USERNAME: ${PG_USERNAME}
+          SPRING_DATASOURCE_PASSWORD: ${PG_PASSWORD}
+          SPRING_LIQUIBASE_LIQUIBASE_SCHEMA: ${LIQUIBASE_SCHEMA:-tasks_liquibase}
+          KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+          EMAIL_SENDING_KAFKA_TOPIC: ${EMAIL_SENDING_KAFKA_TOPIC}
+          JWT_SECRET: ${JWT_SECRET}
+          JWT_EXPIRATION: ${JWT_EXPIRATION}
+        depends_on:
+          postgresql:
+            condition: service_healthy
+          kafka:
+            condition: service_healthy
+        networks:
+        - task-tracker
+
+    task-tracker-scheduler:
+      image: "${DOCKERHUB_USERNAME:?Set DOCKERHUB_USERNAME}/task-tracker-scheduler:${IMAGE_TAG:?Set IMAGE_TAG}"
+      platform: linux/amd64
+      container_name: task-tracker-scheduler
+      restart: on-failure
+      environment:
+        KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+        EMAIL_SENDING_KAFKA_TOPIC: ${EMAIL_SENDING_KAFKA_TOPIC}
+        SUMMARIZATION_REQUEST_KAFKA_TOPIC: ${SUMMARIZATION_REQUEST_KAFKA_TOPIC}
+        SUMMARIZATION_RESPONSE_KAFKA_TOPIC: ${SUMMARIZATION_RESPONSE_KAFKA_TOPIC}
+        TASK_TRACKER_BACKEND_URL: ${TASK_TRACKER_BACKEND_URL}
+        TASK_TRACKER_DAILY_REPORT_DATA_PATH: ${TASK_TRACKER_DAILY_REPORT_DATA_PATH}
+        TASK_TRACKER_DAILY_REPORT_DATA_PAGE_SIZE: ${TASK_TRACKER_DAILY_REPORT_DATA_PAGE_SIZE}
+        SCHEDULER_SERVICE_TOKEN: ${SCHEDULER_SERVICE_TOKEN}
+        DAILY_REPORT_CRON: ${DAILY_REPORT_CRON}
+        DAILY_REPORT_ZONE: ${DAILY_REPORT_ZONE}
+      depends_on:
+        kafka:
+          condition: service_healthy
+      networks:
+        - task-tracker
+
+    email-sender-service:
+      image: "${DOCKERHUB_USERNAME:?Set DOCKERHUB_USERNAME}/task-tracker-email-sender-service:${IMAGE_TAG:?Set IMAGE_TAG}"
+      platform: linux/amd64
+      container_name: email-sender-service
+      restart: on-failure
+      environment:
+        UNISENDER_SMTP_HOST: ${UNISENDER_SMTP_HOST}
+        UNISENDER_SMTP_PORT: ${UNISENDER_SMTP_PORT}
+        UNISENDER_SMTP_USERNAME: ${UNISENDER_SMTP_USERNAME}
+        UNISENDER_SMTP_PASSWORD: ${UNISENDER_SMTP_PASSWORD}
+        UNISENDER_FROM_EMAIL: ${UNISENDER_FROM_EMAIL}
+        UNISENDER_FROM_NAME: ${UNISENDER_FROM_NAME}
+        KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+        EMAIL_SENDING_KAFKA_TOPIC: ${EMAIL_SENDING_KAFKA_TOPIC}
+      depends_on:
+        kafka:
+          condition: service_healthy
+      networks:
+        - task-tracker
+
+    summarization-service:
+      image: "${DOCKERHUB_USERNAME:?Set DOCKERHUB_USERNAME}/task-tracker-summarization-service:${IMAGE_TAG:?Set IMAGE_TAG}"
+      platform: linux/amd64
+      container_name: summarization-service
+      restart: on-failure
+      environment:
+        KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+        SUMMARIZATION_REQUEST_KAFKA_TOPIC: ${SUMMARIZATION_REQUEST_KAFKA_TOPIC}
+        SUMMARIZATION_RESPONSE_KAFKA_TOPIC: ${SUMMARIZATION_RESPONSE_KAFKA_TOPIC}
+        GIGACHAT_AUTHORIZATION_KEY: ${GIGACHAT_AUTHORIZATION_KEY}
+        GIGACHAT_SCOPE: ${GIGACHAT_SCOPE}
+        GIGACHAT_MODEL: ${GIGACHAT_MODEL}
+
+        JAVA_TOOL_OPTIONS: >-
+          -Djavax.net.ssl.trustStore=/app/gigachat-cacerts
+          -Djavax.net.ssl.trustStorePassword=changeit
+      depends_on:
+        kafka:
+          condition: service_healthy
+      networks:
+        - task-tracker
+
+volumes:
+  postgres_db:
+    driver: local
+  kafka_data:
+    driver: local
+
+networks:
+  task-tracker:
+    driver: bridge
