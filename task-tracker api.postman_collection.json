@@ -1,0 +1,522 @@
+{
+  "info": {
+    "_postman_id": "fb5fb638-31ab-409d-853d-dd0155ace47d",
+    "name": "task-tracker api",
+    "description": "Based on task-tracker master controller and request DTO code inspected on 2026-10-19. Covers 10 HTTP endpoints in task-tracker-backend. Configure baseUrl before use; localhost:8080 is an editable initial value, not a verified deployment address. Register/Login save JWT from Authorization. Register requires a new email; use Login for an existing user. Tasks mutate and delete data. Internal Reports requires a separate service token. Scripts were not executed against a running application. Use collection variables; same-named environment variables override them.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "19115668"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });\nconst header = pm.response.headers.get('Authorization');\npm.test('Authorization contains Bearer token', function () {\n    pm.expect(header).to.be.a('string');\n    pm.expect(header).to.match(/^Bearer\\s+\\S+$/i);\n});\nif (pm.response.code === 200 && header && /^Bearer\\s+\\S+$/i.test(header)) {\n    pm.collectionVariables.set('accessToken', header.replace(/^Bearer\\s+/i, '').trim());\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"Oleg Userov\",\n  \"email\": \"example@gmail.com\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\",\n  \"timezone\": \"Europe/Moscow\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "AuthenticationController.register. Creates a new user. Use a unique email; repeating registration for an existing user is not a successful scenario."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });\nconst header = pm.response.headers.get('Authorization');\npm.test('Authorization contains Bearer token', function () {\n    pm.expect(header).to.be.a('string');\n    pm.expect(header).to.match(/^Bearer\\s+\\S+$/i);\n});\nif (pm.response.code === 200 && header && /^Bearer\\s+\\S+$/i.test(header)) {\n    pm.collectionVariables.set('accessToken', header.replace(/^Bearer\\s+/i, '').trim());\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"example@gmail.com\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "AuthenticationController.authenticate. Saves JWT from the Authorization response header, not from a JSON body."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Authorization response header is empty', function () { pm.expect(pm.response.headers.get('Authorization')).to.eql(''); });",
+                  "if (pm.response.code === 200) { pm.collectionVariables.set('accessToken', ''); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "AuthenticationController.logout. Requires authentication. Clears the server SecurityContext and the Authorization response header. The controller does not revoke the issued JWT. The collection clears its local accessToken."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get User Info",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is an object', function () { pm.expect(pm.response.json()).to.be.an('object'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            },
+            "description": "UserController.getUser. Current authenticated user. The endpoint is /users, not /user."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Create Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', function () { pm.response.to.have.status(201); });\nif (pm.response.code === 201) {\n    const task = pm.response.json();\n    pm.test('Task has an ID', function () { pm.expect(task.id).to.exist; });\n    if (task.id !== undefined && task.id !== null) {\n        pm.collectionVariables.set('taskId', String(task.id));\n    }\n    pm.test('Location points to created task', function () {\n        pm.expect(pm.response.headers.get('Location')).to.be.a('string').and.include('/api/v1/tasks/' + task.id);\n    });\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Some Task 2\",\n  \"description\": \"Some Description\",\n  \"completed\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            },
+            "description": "TaskController.createTask. Title is required, nonblank, max 255 characters. Description max 5000. Saves taskId for subsequent requests."
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Tasks",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Response is an array', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks"
+              ]
+            },
+            "description": "TaskController.getAllUserTasks. Returns tasks belonging to the current user. No pagination parameters in this controller method."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Task By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });\npm.test('Task ID matches', function () { pm.expect(String(pm.response.json().id)).to.eql(String(pm.variables.get('taskId'))); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "{{taskId}}"
+              ]
+            },
+            "description": "TaskController.getTask. Run Create Task first or set taskId to an existing task owned by the current user."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });\nif (pm.response.code === 200) {\n    const task = pm.response.json();\n    const sent = JSON.parse(pm.variables.replaceIn(pm.request.body.raw));\n    pm.test('Task ID matches', function () { pm.expect(String(task.id)).to.eql(String(pm.variables.get('taskId'))); });\n    pm.test('Submitted fields are updated', function () {\n        Object.keys(sent).forEach(function (key) { pm.expect(task[key], key).to.eql(sent[key]); });\n    });\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Task\",\n  \"description\": \"Updated Description\",\n  \"completed\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "{{taskId}}"
+              ]
+            },
+            "description": "TaskController.updateTask. PATCH: keep only fields you want to change, for example {\"completed\": true}. Title max 255 and nonblank when supplied; description max 5000. Supply at least one non-null field."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 204', function () { pm.response.to.have.status(204); });",
+                  "pm.test('Response body is empty', function () { pm.expect(pm.response.text()).to.eql(''); });",
+                  "if (pm.response.code === 204) { pm.collectionVariables.set('taskId', ''); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/tasks/{{taskId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "{{taskId}}"
+              ]
+            },
+            "description": "TaskController.deleteTask. Deletes the task; clears taskId after success."
+          },
+          "response": []
+        }
+      ],
+      "description": "Run in order. Creates, reads, updates and deletes a task."
+    },
+    {
+      "name": "Internal Reports",
+      "item": [
+        {
+          "name": "Get Daily Report Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "    const page = pm.response.json();",
+                  "    pm.test('Page has period and items', function () {",
+                  "        pm.expect(page).to.have.property('period');",
+                  "        pm.expect(page.items).to.be.an('array');",
+                  "    });",
+                  "    pm.test('Cache-Control contains no-store', function () {",
+                  "        pm.expect(pm.response.headers.get('Cache-Control')).to.include('no-store');",
+                  "    });",
+                  "    if (page.nextAfterUserId !== null && page.nextAfterUserId !== undefined) {",
+                  "        pm.collectionVariables.set('afterUserId', String(page.nextAfterUserId));",
+                  "    } else {",
+                  "        pm.collectionVariables.set('afterUserId', '');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/internal/v1/reports/daily-data?from={{reportFrom}}&to={{reportTo}}&limit={{reportLimit}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "internal",
+                "v1",
+                "reports",
+                "daily-data"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "{{reportFrom}}"
+                },
+                {
+                  "key": "to",
+                  "value": "{{reportTo}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "{{reportLimit}}"
+                },
+                {
+                  "key": "afterUserId",
+                  "value": "{{afterUserId}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "InternalReportController.getAllUserTasksByUserId. Requires a separate JWT granting SCOPE_internal:reports:read. Required: from and to as ISO-8601 Instant. Optional: limit (controller default 100), afterUserId. First page: disable afterUserId. Next page: enable it only when the response supplies nextAfterUserId. The response cursor is saved to afterUserId. Stop when no next cursor is returned."
+          },
+          "response": []
+        }
+      ],
+      "description": "Separate service token required. Exclude this folder from a regular user flow if no internal token is available.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{internalAccessToken}}",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "username",
+      "value": "Oleg Userov"
+    },
+    {
+      "key": "email",
+      "value": "example@gmail.com"
+    },
+    {
+      "key": "password",
+      "value": "password123"
+    },
+    {
+      "key": "timezone",
+      "value": "Europe/Moscow"
+    },
+    {
+      "key": "taskId",
+      "value": ""
+    },
+    {
+      "key": "internalAccessToken",
+      "value": ""
+    },
+    {
+      "key": "reportFrom",
+      "value": "2026-10-18T00:00:00Z"
+    },
+    {
+      "key": "reportTo",
+      "value": "2026-10-19T00:00:00Z"
+    },
+    {
+      "key": "reportLimit",
+      "value": "100"
+    },
+    {
+      "key": "afterUserId",
+      "value": ""
+    }
+  ]
+}
