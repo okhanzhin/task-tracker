@@ -1,7 +1,7 @@
 package com.okhanzhin.task.tracker.backend.mapper;
 
 import com.okhanzhin.task.tracker.backend.model.common.Status;
-import com.okhanzhin.task.tracker.backend.model.dto.SecurityUser;
+import com.okhanzhin.task.tracker.backend.security.SecurityUser;
 import com.okhanzhin.task.tracker.backend.model.dto.UserDTO;
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.UserResponse;

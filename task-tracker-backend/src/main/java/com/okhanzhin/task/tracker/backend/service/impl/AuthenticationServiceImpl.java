@@ -2,7 +2,7 @@ package com.okhanzhin.task.tracker.backend.service.impl;
 
 import com.okhanzhin.task.tracker.backend.exception.InvalidCredentialsException;
 import com.okhanzhin.task.tracker.backend.mapper.UserMapper;
-import com.okhanzhin.task.tracker.backend.model.dto.SecurityUser;
+import com.okhanzhin.task.tracker.backend.security.SecurityUser;
 import com.okhanzhin.task.tracker.backend.model.dto.UserDTO;
 import com.okhanzhin.task.tracker.backend.model.dto.request.AuthenticationRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
@@ -17,6 +17,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
+
+import java.util.Locale;
 
 /**
  *
@@ -34,10 +36,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
+        String email = request.getEmail().toLowerCase(Locale.ROOT);
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
+                            email,
                             request.getPassword()
                     )
             );
@@ -52,7 +56,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     .build();
         } catch (AuthenticationException e) {
             log.info("User with email: {} - not authenticated: {}",
-                    request.getEmail(),
+                    email,
                     e.getClass().getSimpleName()
             );
             throw new InvalidCredentialsException();

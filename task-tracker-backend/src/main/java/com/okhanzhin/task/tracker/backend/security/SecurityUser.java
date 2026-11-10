@@ -1,4 +1,4 @@
-package com.okhanzhin.task.tracker.backend.model.dto;
+package com.okhanzhin.task.tracker.backend.security;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

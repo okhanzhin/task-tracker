@@ -1,7 +1,7 @@
 package com.okhanzhin.task.tracker.backend.service.impl;
 
 import com.okhanzhin.task.tracker.backend.model.common.Status;
-import com.okhanzhin.task.tracker.backend.model.dto.SecurityUser;
+import com.okhanzhin.task.tracker.backend.security.SecurityUser;
 import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
 import com.okhanzhin.task.tracker.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
