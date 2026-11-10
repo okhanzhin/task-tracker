@@ -4,14 +4,16 @@ import com.okhanzhin.task.tracker.backend.model.dto.request.AuthenticationReques
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.AuthenticationResponse;
 import com.okhanzhin.task.tracker.backend.service.AuthenticationService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.okhanzhin.task.tracker.backend.service.TokenRevocationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,6 +30,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
+    private final TokenRevocationService tokenRevocationService;
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticate(@Valid @RequestBody AuthenticationRequest request) {
@@ -49,8 +52,18 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     // TODO: 10.09.2026 попробовать убрать request
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
-        response.setHeader(AUTHORIZATION, "");
+    public ResponseEntity<Void>  logout(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
+        if (!authorization.startsWith(BEARER_PREFIX)) {
+            throw new BadCredentialsException(
+                    "Bearer token is required"
+            );
+        }
+
+        String token = authorization.substring(BEARER_PREFIX.length()).trim();
+
+        tokenRevocationService.revoke(token);
         SecurityContextHolder.clearContext();
+
+        return ResponseEntity.noContent().build();
     }
 }

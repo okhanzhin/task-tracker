@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.time.Duration;
 import java.util.Date;
+import java.util.UUID;
 
 import static com.okhanzhin.task.tracker.backend.utils.Constants.TASK_TRACKER_SCHEDULER_TOKEN_SUBJECT;
 
@@ -43,6 +44,7 @@ public class JwtServiceImpl implements JwtService {
         var expiredDate = new Date(issuedDate.getTime() + jwtLifetime.toMillis());
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(userDetails.getUsername())
                 .claim(JwtClaims.TYPE, JwtClaims.TYPE_USER)
                 .issuedAt(issuedDate)
