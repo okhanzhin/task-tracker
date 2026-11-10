@@ -61,6 +61,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String jwtToken = authHeader.substring(BEARER_PREFIX.length()).trim();
 
         if (jwtToken.isEmpty()) {
+            SecurityContextHolder.clearContext();
             sendUnauthorized(request, response, new BadCredentialsException("JWT token is empty"));
             return;
         }

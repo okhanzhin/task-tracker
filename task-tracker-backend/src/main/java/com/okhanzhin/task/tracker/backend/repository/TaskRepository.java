@@ -22,7 +22,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     Optional<Task> findByIdAndOwnerId(Long taskId, Long ownerId);
 
-    List<Task> findDistinctByOwner(User owner);
+    List<Task> findAllByOwnerIdOrderByIdAsc(Long ownerId);
 
     @Query("""
         select

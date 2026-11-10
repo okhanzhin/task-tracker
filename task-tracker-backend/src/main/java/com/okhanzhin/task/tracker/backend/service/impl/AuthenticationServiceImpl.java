@@ -1,7 +1,7 @@
 package com.okhanzhin.task.tracker.backend.service.impl;
 
+import com.okhanzhin.task.tracker.backend.config.properties.JwtProperties;
 import com.okhanzhin.task.tracker.backend.exception.InvalidCredentialsException;
-import com.okhanzhin.task.tracker.backend.mapper.UserMapper;
 import com.okhanzhin.task.tracker.backend.model.dto.request.AuthenticationRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.AuthenticationResponse;
@@ -29,7 +29,6 @@ import java.util.Locale;
 public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserService userService;
-    private final UserMapper userMapper;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 

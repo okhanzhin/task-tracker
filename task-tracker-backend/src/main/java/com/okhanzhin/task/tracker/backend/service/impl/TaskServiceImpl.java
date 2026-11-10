@@ -55,11 +55,10 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<TaskResponse> getAllTasks(Long ownerId) {
-        User owner = userRepository.findById(ownerId)
-                .orElseThrow(UserNotFoundException::new);
-        List<Task> taskList = taskRepository.findDistinctByOwner(owner);
-
-        return taskList.stream().map(taskMapper::toResponse).collect(Collectors.toList());
+        return taskRepository.findAllByOwnerIdOrderByIdAsc(ownerId)
+                .stream()
+                .map(taskMapper::toResponse)
+                .toList();
     }
 
     @Override
