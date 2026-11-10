@@ -3,7 +3,7 @@ package com.okhanzhin.task.tracker.backend.mapper;
 import com.okhanzhin.task.tracker.backend.model.common.Status;
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.UserResponse;
-import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
+import com.okhanzhin.task.tracker.backend.model.entity.User;
 import com.okhanzhin.task.tracker.backend.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,8 +23,8 @@ public class UserMapper {
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserDAO map(RegisterRequest registerRequest) {
-        return UserDAO.builder()
+    public User map(RegisterRequest registerRequest) {
+        return User.builder()
                 .username(registerRequest.getUsername())
                 .email(registerRequest.getEmail().toLowerCase(Locale.ROOT))
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
@@ -33,20 +33,20 @@ public class UserMapper {
                 .build();
     }
 
-    public UserResponse mapToUserResponse(UserDAO userDAO) {
+    public UserResponse mapToUserResponse(User user) {
         return UserResponse.builder()
-                .id(userDAO.getId())
-                .email(userDAO.getEmail())
+                .id(user.getId())
+                .email(user.getEmail())
                 .build();
     }
 
-    public SecurityUser mapToUserDetails(UserDAO userDAO) {
+    public SecurityUser mapToUserDetails(User user) {
         return SecurityUser.builder()
-                .userId(userDAO.getId())
-                .username(userDAO.getEmail())
-                .password(userDAO.getPassword())
+                .userId(user.getId())
+                .username(user.getEmail())
+                .password(user.getPassword())
                 .authorities(List.of())
-                .isActive(userDAO.getStatus() == Status.ACTIVE)
+                .isActive(user.getStatus() == Status.ACTIVE)
                 .build();
     }
 }

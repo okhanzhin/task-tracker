@@ -1,6 +1,6 @@
 package com.okhanzhin.task.tracker.backend.repository;
 
-import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
+import com.okhanzhin.task.tracker.backend.model.entity.User;
 import com.okhanzhin.task.tracker.backend.model.entity.projection.ReportUserView;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,15 +17,15 @@ import java.util.Optional;
  * @author okhanzhin on 30.08.2026
  */
 @Repository
-public interface UserRepository extends JpaRepository<UserDAO, Long> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
-    Optional<UserDAO> findByEmail(String email);
+    Optional<User> findByEmail(String email);
 
     @Query("""
             select
                 user.id as  id,
                 user.email as email
-            from UserDAO user
+            from User user
             where (:afterUserId is null or user.id > :afterUserId)
                 and exists(
                     select task.id

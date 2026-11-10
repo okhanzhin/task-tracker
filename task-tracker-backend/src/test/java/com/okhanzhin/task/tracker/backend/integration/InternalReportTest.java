@@ -1,9 +1,8 @@
 package com.okhanzhin.task.tracker.backend.integration;
 
 import com.okhanzhin.task.tracker.backend.abstracts.IntegrationTest;
-import com.okhanzhin.task.tracker.backend.model.entity.TaskDAO;
-import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
-import com.okhanzhin.task.tracker.backend.service.JwtService;
+import com.okhanzhin.task.tracker.backend.model.entity.Task;
+import com.okhanzhin.task.tracker.backend.model.entity.User;
 import com.okhanzhin.task.tracker.backend.utils.TestDataFactory;
 import com.okhanzhin.task.tracker.common.model.report.DailyReportDataPage;
 import com.okhanzhin.task.tracker.common.model.report.TaskData;
@@ -11,7 +10,6 @@ import com.okhanzhin.task.tracker.common.model.report.UserReportData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -55,19 +53,19 @@ public class InternalReportTest extends IntegrationTest {
     @Test
     void shouldReturnOnlyEligibleUsersAndGroupTheirTasks()
             throws Exception {
-        UserDAO mixedUser = createUser("mixed");
-        UserDAO pendingUser = createUser("pending");
-        UserDAO oldCompletedUser = createUser("old");
+        User mixedUser = createUser("mixed");
+        User pendingUser = createUser("pending");
+        User oldCompletedUser = createUser("old");
         createUser("empty");
 
-        TaskDAO completedTask = createTask(
+        Task completedTask = createTask(
                 mixedUser,
                 "Completed during period",
                 "Completed description",
                 FROM.plusSeconds(3600)
         );
 
-        TaskDAO mixedPendingTask = createTask(
+        Task mixedPendingTask = createTask(
                 mixedUser,
                 "Pending task",
                 null,
@@ -88,7 +86,7 @@ public class InternalReportTest extends IntegrationTest {
                 TO.plusSeconds(1)
         );
 
-        TaskDAO pendingTask = createTask(
+        Task pendingTask = createTask(
                 pendingUser,
                 "Another user's pending task",
                 null,
@@ -161,7 +159,7 @@ public class InternalReportTest extends IntegrationTest {
     @Test
     void shouldIncludeFromBoundaryAndExcludeToBoundary()
             throws Exception {
-        UserDAO user = createUser("boundaries");
+        User user = createUser("boundaries");
 
         createTask(
                 user,
@@ -170,14 +168,14 @@ public class InternalReportTest extends IntegrationTest {
                 FROM.minusSeconds(1)
         );
 
-        TaskDAO atFrom = createTask(
+        Task atFrom = createTask(
                 user,
                 "Exactly at from",
                 null,
                 FROM
         );
 
-        TaskDAO beforeTo = createTask(
+        Task beforeTo = createTask(
                 user,
                 "Before to",
                 null,
@@ -207,7 +205,7 @@ public class InternalReportTest extends IntegrationTest {
     @Test
     void shouldExcludeUserWhoseOnlyTaskWasCompletedAtTo()
             throws Exception {
-        UserDAO user = createUser("only-at-to");
+        User user = createUser("only-at-to");
 
         createTask(user, "Exactly at to", null, TO);
 
@@ -219,9 +217,9 @@ public class InternalReportTest extends IntegrationTest {
 
     @Test
     void shouldReturnReopenedTaskAsPending() throws Exception {
-        UserDAO user = createUser("reopened");
+        User user = createUser("reopened");
 
-        TaskDAO task = createTask(
+        Task task = createTask(
                 user,
                 "Reopened task",
                 null,
@@ -251,10 +249,10 @@ public class InternalReportTest extends IntegrationTest {
     @Test
     void shouldPaginateEligibleUsersWithoutSkippingExtraCandidate()
             throws Exception {
-        UserDAO first = createUser("first");
+        User first = createUser("first");
         createTask(first, "First task", null, null);
 
-        UserDAO excluded = createUser("excluded");
+        User excluded = createUser("excluded");
         createTask(
                 excluded,
                 "Old task",
@@ -262,10 +260,10 @@ public class InternalReportTest extends IntegrationTest {
                 FROM.minusSeconds(1)
         );
 
-        UserDAO second = createUser("second");
+        User second = createUser("second");
         createTask(second, "Second task", null, null);
 
-        UserDAO third = createUser("third");
+        User third = createUser("third");
         createTask(third, "Third task", null, null);
 
         DailyReportDataPage firstPage = requestPage(2, null);
@@ -294,10 +292,10 @@ public class InternalReportTest extends IntegrationTest {
     @Test
     void shouldReturnNullCursorWhenUserCountEqualsLimit()
             throws Exception {
-        UserDAO first = createUser("exact-first");
+        User first = createUser("exact-first");
         createTask(first, "First task", null, null);
 
-        UserDAO second = createUser("exact-second");
+        User second = createUser("exact-second");
         createTask(second, "Second task", null, null);
 
         DailyReportDataPage page = requestPage(2, null);
@@ -311,7 +309,7 @@ public class InternalReportTest extends IntegrationTest {
 
     @Test
     void shouldReturnEmptyPageAfterLastUser() throws Exception {
-        UserDAO user = createUser("last");
+        User user = createUser("last");
         createTask(user, "Pending task", null, null);
 
         DailyReportDataPage page = requestPage(
@@ -325,7 +323,7 @@ public class InternalReportTest extends IntegrationTest {
 
     @Test
     void shouldNotLimitTasksByUserPageSize() throws Exception {
-        UserDAO user = createUser("many-tasks");
+        User user = createUser("many-tasks");
 
         for (int i = 0; i < 5; i++) {
             createTask(
@@ -455,7 +453,7 @@ public class InternalReportTest extends IntegrationTest {
 
     @Test
     void shouldUseDefaultLimitWhenNotProvided() throws Exception {
-        UserDAO user = createUser("default-limit");
+        User user = createUser("default-limit");
         createTask(user, "Pending task", null, null);
 
         mockMvc.perform(validRequest())
@@ -463,7 +461,7 @@ public class InternalReportTest extends IntegrationTest {
                 .andExpect(jsonPath("$.items.length()").value(1));
     }
 
-    private UserDAO createUser(String name) {
+    private User createUser(String name) {
         return TestDataFactory.savedUser(
                 name,
                 name + "@example.com",
@@ -474,8 +472,8 @@ public class InternalReportTest extends IntegrationTest {
         );
     }
 
-    private TaskDAO createTask(
-            UserDAO owner,
+    private Task createTask(
+            User owner,
             String title,
             String description,
             Instant completedAt

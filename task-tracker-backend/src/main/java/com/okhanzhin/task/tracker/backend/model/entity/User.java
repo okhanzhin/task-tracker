@@ -28,7 +28,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDAO {
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,5 +51,5 @@ public class UserDAO {
     private String timezone;
 
     @OneToMany(mappedBy = "owner", fetch = FetchType.LAZY)
-    private List<TaskDAO> tasks;
+    private List<Task> tasks;
 }

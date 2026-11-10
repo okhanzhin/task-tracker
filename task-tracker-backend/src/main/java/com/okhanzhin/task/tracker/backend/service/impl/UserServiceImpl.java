@@ -6,7 +6,7 @@ import com.okhanzhin.task.tracker.backend.exception.UserNotFoundException;
 import com.okhanzhin.task.tracker.backend.mapper.UserMapper;
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.UserResponse;
-import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
+import com.okhanzhin.task.tracker.backend.model.entity.User;
 import com.okhanzhin.task.tracker.backend.producer.EmailTaskProducer;
 import com.okhanzhin.task.tracker.backend.repository.UserRepository;
 import com.okhanzhin.task.tracker.backend.security.SecurityUser;
@@ -64,9 +64,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserResponse findByUserDetails(UserDetails userDetails) throws ApiException {
-        UserDAO userDAO = userRepository.findByEmail(userDetails.getUsername()).
+        User user = userRepository.findByEmail(userDetails.getUsername()).
                 orElseThrow(UserNotFoundException::new);
 
-        return userMapper.mapToUserResponse(userDAO);
+        return userMapper.mapToUserResponse(user);
     }
 }

@@ -2,8 +2,8 @@ package com.okhanzhin.task.tracker.backend.mapper;
 
 import com.okhanzhin.task.tracker.backend.model.dto.request.CreateTaskRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.TaskResponse;
-import com.okhanzhin.task.tracker.backend.model.entity.TaskDAO;
-import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
+import com.okhanzhin.task.tracker.backend.model.entity.Task;
+import com.okhanzhin.task.tracker.backend.model.entity.User;
 import com.okhanzhin.task.tracker.backend.model.entity.projection.ReportTaskView;
 import com.okhanzhin.task.tracker.common.model.report.TaskData;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +22,11 @@ public class TaskMapper {
 
     private final Clock clock;
 
-    public TaskDAO map(UserDAO owner, CreateTaskRequest request) {
+    public Task map(User owner, CreateTaskRequest request) {
         boolean isCompleted = Boolean.TRUE.equals(request.getCompleted());
         Instant completedAt = isCompleted ? Instant.now(clock) : null;
 
-        return TaskDAO.builder()
+        return Task.builder()
                 .title(request.getTitle().trim())
                 .description(request.getDescription())
                 .owner(owner)
@@ -35,7 +35,7 @@ public class TaskMapper {
                 .build();
     }
 
-    public TaskResponse toResponse(TaskDAO task) {
+    public TaskResponse toResponse(Task task) {
         return TaskResponse.builder()
                 .id(task.getId())
                 .title(task.getTitle())
