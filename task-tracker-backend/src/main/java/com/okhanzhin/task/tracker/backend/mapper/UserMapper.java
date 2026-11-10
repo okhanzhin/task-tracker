@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Маппер для пользователей
@@ -27,7 +28,7 @@ public class UserMapper {
     public UserDAO map(RegisterRequest registerRequest) {
         return UserDAO.builder()
                 .username(registerRequest.getUsername())
-                .email(registerRequest.getEmail())
+                .email(registerRequest.getEmail().toLowerCase(Locale.ROOT))
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .status(Status.ACTIVE)
                 .timezone(registerRequest.getTimezone())
