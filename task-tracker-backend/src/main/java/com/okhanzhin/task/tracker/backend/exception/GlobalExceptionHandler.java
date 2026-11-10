@@ -5,6 +5,7 @@ import com.okhanzhin.task.tracker.backend.exception.error.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -80,11 +81,60 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMessageNotReadable(
+            HttpMessageNotReadableException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(
+                        "Request body is missing or contains invalid JSON"
+                ));
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(Exception exception) {
+    public ResponseEntity<ErrorResponse> handleGenericException(
+            Exception exception
+    ) {
+        if (exception instanceof org.springframework.web.ErrorResponse springError) {
+            var status = springError.getStatusCode();
+
+            if (status.is5xxServerError()) {
+                log.error("HTTP server error: {}", status.value(), exception);
+            } else {
+                log.debug(
+                        "HTTP request rejected: status={}, exception={}",
+                        status.value(),
+                        exception.getClass().getSimpleName()
+                );
+            }
+
+            String message = status.is5xxServerError()
+                    ? ErrorMessage.INTERNAL_ERROR.getMessage()
+                    : getClientErrorMessage(status);
+
+            return ResponseEntity
+                    .status(status)
+                    .headers(springError.getHeaders())
+                    .body(new ErrorResponse(message));
+        }
+
         log.error("Unhandled exception", exception);
+
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse(ErrorMessage.INTERNAL_ERROR.getMessage()));
+                .body(new ErrorResponse(
+                        ErrorMessage.INTERNAL_ERROR.getMessage()
+                ));
+    }
+
+    private String getClientErrorMessage(
+            org.springframework.http.HttpStatusCode status
+    ) {
+        HttpStatus httpStatus = HttpStatus.resolve(status.value());
+
+        return httpStatus != null
+                ? httpStatus.getReasonPhrase()
+                : "Request rejected";
     }
 }
