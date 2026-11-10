@@ -1,13 +1,11 @@
 package com.okhanzhin.task.tracker.backend.mapper;
 
 import com.okhanzhin.task.tracker.backend.model.common.Status;
-import com.okhanzhin.task.tracker.backend.security.SecurityUser;
-import com.okhanzhin.task.tracker.backend.model.dto.UserDTO;
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.UserResponse;
 import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
+import com.okhanzhin.task.tracker.backend.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -35,17 +33,6 @@ public class UserMapper {
                 .build();
     }
 
-    public UserDTO mapToFullDTO(UserDAO userDAO) {
-        return UserDTO.builder()
-                .id(userDAO.getId())
-                .username(userDAO.getUsername())
-                .email(userDAO.getEmail())
-                .password(userDAO.getPassword())
-                .status(userDAO.getStatus())
-                .timezone(userDAO.getTimezone())
-                .build();
-    }
-
     public UserResponse mapToUserResponse(UserDAO userDAO) {
         return UserResponse.builder()
                 .id(userDAO.getId())
@@ -53,13 +40,13 @@ public class UserMapper {
                 .build();
     }
 
-    public UserDetails mapToUserDetails(UserDTO userDTO) {
+    public SecurityUser mapToUserDetails(UserDAO userDAO) {
         return SecurityUser.builder()
-                .userId(userDTO.getId())
-                .username(userDTO.getEmail())
-                .password(userDTO.getPassword())
+                .userId(userDAO.getId())
+                .username(userDAO.getEmail())
+                .password(userDAO.getPassword())
                 .authorities(List.of())
-                .isActive(userDTO.getStatus() == Status.ACTIVE)
+                .isActive(userDAO.getStatus() == Status.ACTIVE)
                 .build();
     }
 }

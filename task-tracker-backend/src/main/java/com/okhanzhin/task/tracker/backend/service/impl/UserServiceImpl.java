@@ -4,12 +4,12 @@ import com.okhanzhin.task.tracker.backend.exception.ApiException;
 import com.okhanzhin.task.tracker.backend.exception.EmailAlreadyRegisteredException;
 import com.okhanzhin.task.tracker.backend.exception.UserNotFoundException;
 import com.okhanzhin.task.tracker.backend.mapper.UserMapper;
-import com.okhanzhin.task.tracker.backend.model.dto.UserDTO;
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.UserResponse;
 import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
 import com.okhanzhin.task.tracker.backend.producer.EmailTaskProducer;
 import com.okhanzhin.task.tracker.backend.repository.UserRepository;
+import com.okhanzhin.task.tracker.backend.security.SecurityUser;
 import com.okhanzhin.task.tracker.backend.service.UserService;
 import com.okhanzhin.task.tracker.backend.utils.Constants;
 import com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask;
@@ -39,18 +39,19 @@ public class UserServiceImpl implements UserService {
     private final EmailTaskProducer emailTaskProducer;
 
     @Override
-    public UserDTO createUser(RegisterRequest request) {
+    public SecurityUser createUser(RegisterRequest request) {
         var userDAO = userMapper.map(request);
+
         try {
             userRepository.save(userDAO);
             log.info("User {} was successfully saved to the database.", userDAO.getUsername());
 
-        } catch (DataIntegrityViolationException e) {
-            if (hasConstraint(e, Constants.UK_USERS_EMAIL)) {
+        } catch (DataIntegrityViolationException exception) {
+            if (hasConstraint(exception, Constants.UK_USERS_EMAIL)) {
                 throw new EmailAlreadyRegisteredException();
             }
 
-            throw e;
+            throw exception;
         }
         emailTaskProducer.send(EmailSendingTask.builder()
                 .messageId(UUID.randomUUID())
@@ -58,7 +59,7 @@ public class UserServiceImpl implements UserService {
                 .subject(SUCCESS_USER_REGISTRATION_EMAIL_TASK_SUBJECT)
                 .body(SUCCESS_USER_REGISTRATION_EMAIL_TASK_BODY).build());
 
-        return userMapper.mapToFullDTO(userDAO);
+        return userMapper.mapToUserDetails(userDAO);
     }
 
     @Override

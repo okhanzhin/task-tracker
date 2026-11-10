@@ -2,11 +2,10 @@ package com.okhanzhin.task.tracker.backend.service.impl;
 
 import com.okhanzhin.task.tracker.backend.exception.InvalidCredentialsException;
 import com.okhanzhin.task.tracker.backend.mapper.UserMapper;
-import com.okhanzhin.task.tracker.backend.security.SecurityUser;
-import com.okhanzhin.task.tracker.backend.model.dto.UserDTO;
 import com.okhanzhin.task.tracker.backend.model.dto.request.AuthenticationRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.AuthenticationResponse;
+import com.okhanzhin.task.tracker.backend.security.SecurityUser;
 import com.okhanzhin.task.tracker.backend.service.AuthenticationService;
 import com.okhanzhin.task.tracker.backend.service.JwtService;
 import com.okhanzhin.task.tracker.backend.service.UserService;
@@ -65,10 +64,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthenticationResponse register(RegisterRequest request) {
-        UserDTO user = userService.createUser(request);
+        SecurityUser user = userService.createUser(request);
 
         return AuthenticationResponse.builder()
-                .token(jwtService.generateToken(userMapper.mapToUserDetails(user)))
+                .token(jwtService.generateToken(user))
                 .build();
     }
 }
