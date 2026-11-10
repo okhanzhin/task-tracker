@@ -59,7 +59,7 @@ public class UserMapper {
                 .username(userDTO.getEmail())
                 .password(userDTO.getPassword())
                 .authorities(List.of())
-                .isActive(userDTO.getStatus().equals(Status.ACTIVE))
+                .isActive(userDTO.getStatus() == Status.ACTIVE)
                 .build();
     }
 }

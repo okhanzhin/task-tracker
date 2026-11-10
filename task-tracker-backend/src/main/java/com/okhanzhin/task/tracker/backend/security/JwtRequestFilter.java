@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -102,6 +103,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private Authentication createUserAuthentication(String subject, HttpServletRequest request) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(subject);
+
+        if (!userDetails.isEnabled()) {
+            throw new DisabledException("User is disabled");
+        }
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 userDetails,
