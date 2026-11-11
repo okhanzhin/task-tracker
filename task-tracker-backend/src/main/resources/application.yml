@@ -55,7 +55,9 @@ app:
   kafka:
     topics:
       email-sending: ${EMAIL_SENDING_KAFKA_TOPIC:EMAIL_SENDING_TASKS}
-
+  security:
+      revoked-tokens:
+        cleanup-cron: ${REVOKED_TOKENS_CLEANUP_CRON:0 0 * * * *}
 jwt:
   secret: ${JWT_SECRET:K7q7NnSAx5ogW6MM0G0YvYsw7WXvYDY12E5tTBaVyX8=}
   lifetime: ${JWT_EXPIRATION:PT1H}

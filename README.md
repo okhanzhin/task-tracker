@@ -114,6 +114,73 @@ docker compose up -d postgresql kafka
 
 В `application.yml` есть значения по умолчанию для localhost. Внутри Docker-сети сервисы обращаются друг к другу по именам контейнеров (`postgresql:5432`, `kafka:29092`). Секреты при локальном запуске передаются через переменные окружения.
 
+## Выпуск сервисного токена для scheduler
+
+Scheduler обращается к внутреннему API backend с сервисным JWT.
+Для выпуска и обновления токена используется профиль `issue-service-token`.
+
+### Подготовка
+
+Настройте окружение backend так же, как для обычного запуска:
+подключение к PostgreSQL, JWT_SECRET и остальные необходимые параметры.
+
+JWT_SECRET при выпуске токена должен совпадать с JWT_SECRET
+работающего backend, иначе backend не примет выданный токен.
+
+### Сборка
+
+Из корня репозитория выполните:
+
+```bash
+./mvnw -pl task-tracker-backend -am clean package -DskipTests
+```
+
+### Выпуск токена
+
+```bash
+java -jar task-tracker-backend/target/task-tracker-backend-1.0-SNAPSHOT.jar \
+  --spring.profiles.active=issue-service-token \
+  --server.port=0
+```
+
+После запуска в консоли появится строка:
+
+```text
+SCHEDULER_SERVICE_TOKEN=<выданный токен>
+```
+
+Скопируйте значение токена и остановите временно запущенный backend
+сочетанием Ctrl+C.
+
+Параметр `--server.port=0` позволяет использовать свободный HTTP-порт,
+чтобы не конфликтовать с уже работающим backend.
+
+### Подключение токена
+
+Сохраните токен в локальном `.env`:
+
+```dotenv
+SCHEDULER_SERVICE_TOKEN=<выданный токен>
+```
+
+Пересоздайте контейнер scheduler, чтобы он получил новое значение:
+
+```bash
+docker compose up -d --no-deps --force-recreate task-tracker-scheduler
+```
+
+### Обновление токена
+
+Срок действия задаётся настройкой `jwt.service-lifetime`
+через переменную `JWT_SERVICE_EXPIRATION`.
+По умолчанию используется `PT2160H`, то есть 90 дней.
+
+До истечения срока повторите выпуск токена, обновите
+SCHEDULER_SERVICE_TOKEN и пересоздайте контейнер scheduler.
+
+Не коммитьте выданный токен в репозиторий и не публикуйте
+содержащий его вывод консоли.
+
 ## Тесты
 
 ```bash

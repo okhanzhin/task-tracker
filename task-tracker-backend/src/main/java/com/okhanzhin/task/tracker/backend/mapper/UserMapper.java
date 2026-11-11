@@ -1,17 +1,16 @@
 package com.okhanzhin.task.tracker.backend.mapper;
 
 import com.okhanzhin.task.tracker.backend.model.common.Status;
-import com.okhanzhin.task.tracker.backend.model.dto.SecurityUser;
-import com.okhanzhin.task.tracker.backend.model.dto.UserDTO;
 import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.UserResponse;
-import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
+import com.okhanzhin.task.tracker.backend.model.entity.User;
+import com.okhanzhin.task.tracker.backend.security.SecurityUser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Маппер для пользователей
@@ -24,41 +23,30 @@ public class UserMapper {
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserDAO map(RegisterRequest registerRequest) {
-        return UserDAO.builder()
+    public User map(RegisterRequest registerRequest) {
+        return User.builder()
                 .username(registerRequest.getUsername())
-                .email(registerRequest.getEmail())
+                .email(registerRequest.getEmail().toLowerCase(Locale.ROOT))
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .status(Status.ACTIVE)
                 .timezone(registerRequest.getTimezone())
                 .build();
     }
 
-    public UserDTO mapToFullDTO(UserDAO userDAO) {
-        return UserDTO.builder()
-                .id(userDAO.getId())
-                .username(userDAO.getUsername())
-                .email(userDAO.getEmail())
-                .password(userDAO.getPassword())
-                .status(userDAO.getStatus())
-                .timezone(userDAO.getTimezone())
-                .build();
-    }
-
-    public UserResponse mapToUserResponse(UserDAO userDAO) {
+    public UserResponse mapToUserResponse(User user) {
         return UserResponse.builder()
-                .id(userDAO.getId())
-                .email(userDAO.getEmail())
+                .id(user.getId())
+                .email(user.getEmail())
                 .build();
     }
 
-    public UserDetails mapToUserDetails(UserDTO userDTO) {
+    public SecurityUser mapToUserDetails(User user) {
         return SecurityUser.builder()
-                .userId(userDTO.getId())
-                .username(userDTO.getEmail())
-                .password(userDTO.getPassword())
+                .userId(user.getId())
+                .username(user.getEmail())
+                .password(user.getPassword())
                 .authorities(List.of())
-                .isActive(userDTO.getStatus().equals(Status.ACTIVE))
+                .isActive(user.getStatus() == Status.ACTIVE)
                 .build();
     }
 }

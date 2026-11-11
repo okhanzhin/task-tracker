@@ -1,11 +1,13 @@
 package com.okhanzhin.task.tracker.backend.service.impl;
 
+import com.okhanzhin.task.tracker.backend.config.properties.JwtProperties;
 import com.okhanzhin.task.tracker.backend.service.JwtService;
 import com.okhanzhin.task.tracker.backend.utils.JwtClaims;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.SecretKey;
 import java.time.Duration;
 import java.util.Date;
+import java.util.UUID;
 
 import static com.okhanzhin.task.tracker.backend.utils.Constants.TASK_TRACKER_SCHEDULER_TOKEN_SUBJECT;
 
@@ -27,14 +30,11 @@ public class JwtServiceImpl implements JwtService {
     private final Duration jwtLifetime;
     private final Duration serviceJwtLifetime;
 
-    public JwtServiceImpl(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.lifetime}") Duration jwtLifetime,
-            @Value("${jwt.service-lifetime}") Duration serviceJwtLifetime
-    ) {
-        this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
-        this.jwtLifetime = jwtLifetime;
-        this.serviceJwtLifetime = serviceJwtLifetime;
+
+    public JwtServiceImpl(JwtProperties properties) {
+        this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(properties.getSecret()));
+        this.jwtLifetime = properties.getLifetime();
+        this.serviceJwtLifetime = properties.getServiceLifetime();
     }
 
     @Override
@@ -43,6 +43,7 @@ public class JwtServiceImpl implements JwtService {
         var expiredDate = new Date(issuedDate.getTime() + jwtLifetime.toMillis());
 
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(userDetails.getUsername())
                 .claim(JwtClaims.TYPE, JwtClaims.TYPE_USER)
                 .issuedAt(issuedDate)

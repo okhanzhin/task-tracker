@@ -2,10 +2,14 @@ package com.okhanzhin.task.tracker.scheduler.client;
 
 import com.okhanzhin.task.tracker.common.model.report.DailyReportDataPage;
 import com.okhanzhin.task.tracker.scheduler.config.properties.TaskTrackerApiClientProperties;
+import com.okhanzhin.task.tracker.scheduler.exception.RetryableTaskTrackerClientException;
 import com.okhanzhin.task.tracker.scheduler.exception.TaskTrackerClientException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -28,6 +32,15 @@ public class TaskTrackerApiClient {
     private final RestClient restClient;
     private final TaskTrackerApiClientProperties properties;
 
+    @Retryable(
+            retryFor = RetryableTaskTrackerClientException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(
+                    delay = 1000,
+                    multiplier = 2.0,
+                    maxDelay = 5000
+            )
+    )
     public DailyReportDataPage getDailyReportData(
             Instant from,
             Instant to,
@@ -62,6 +75,13 @@ public class TaskTrackerApiClient {
                                         StandardCharsets.UTF_8
                                 );
 
+                                if (isRetryableStatus(status)) {
+                                    throw new RetryableTaskTrackerClientException(
+                                            status,
+                                            body
+                                    );
+                                }
+
                                 throw new TaskTrackerClientException(status, body);
                             })
                     .body(DailyReportDataPage.class);
@@ -71,11 +91,23 @@ public class TaskTrackerApiClient {
             }
 
             return page;
+        } catch (ResourceAccessException exception) {
+            throw new RetryableTaskTrackerClientException(
+                    "Temporary I/O failure while retrieving daily report data",
+                    exception
+            );
         } catch (RestClientException exception) {
             throw new TaskTrackerClientException(
                     "Failed to retrieve daily report data from task-tracker-backend",
                     exception
             );
         }
+    }
+
+    private static boolean isRetryableStatus(int status) {
+        return status == 500
+                || status == 502
+                || status == 503
+                || status == 504;
     }
 }

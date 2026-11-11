@@ -1,6 +1,6 @@
 package com.okhanzhin.task.tracker.backend.controller;
 
-import com.okhanzhin.task.tracker.backend.model.dto.SecurityUser;
+import com.okhanzhin.task.tracker.backend.security.SecurityUser;
 import com.okhanzhin.task.tracker.backend.model.dto.response.UserResponse;
 import com.okhanzhin.task.tracker.backend.service.UserService;
 import lombok.RequiredArgsConstructor;

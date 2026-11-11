@@ -4,6 +4,8 @@ import com.okhanzhin.task.tracker.backend.model.dto.request.RegisterRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
+import java.util.Objects;
+
 /**
  *
  * Правило проверки совпадения паролей в запросе на создание пользователя
@@ -14,7 +16,10 @@ public class PasswordMatchesValidator implements ConstraintValidator<PasswordMat
 
     @Override
     public boolean isValid(RegisterRequest request, ConstraintValidatorContext constraintValidatorContext) {
-        return request != null &&
-                request.getPassword().equals(request.getConfirmPassword());
+        return request != null
+                && Objects.equals(
+                request.getPassword(),
+                request.getConfirmPassword()
+        );
     }
 }

@@ -1,6 +1,7 @@
 package com.okhanzhin.task.tracker.backend.security;
 
 import com.okhanzhin.task.tracker.backend.service.JwtService;
+import com.okhanzhin.task.tracker.backend.service.TokenRevocationService;
 import com.okhanzhin.task.tracker.backend.service.impl.CustomUserDetailsService;
 import com.okhanzhin.task.tracker.backend.utils.JwtClaims;
 import io.jsonwebtoken.Claims;
@@ -13,8 +14,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,6 +44,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
     private final CustomAuthenticationEntryPoint entryPoint;
+    private final TokenRevocationService tokenRevocationService;
 
     @Override
     protected void doFilterInternal(
@@ -57,6 +61,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String jwtToken = authHeader.substring(BEARER_PREFIX.length()).trim();
 
         if (jwtToken.isEmpty()) {
+            SecurityContextHolder.clearContext();
             sendUnauthorized(request, response, new BadCredentialsException("JWT token is empty"));
             return;
         }
@@ -65,23 +70,27 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 Claims claims = jwtService.getClaims(jwtToken);
                 Authentication authentication = createAuthentication(claims, request);
-
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-
-            filterChain.doFilter(request, response);
-        } catch (JwtException | IllegalArgumentException exception) {
-            log.debug("Invalid JWT token - {}", exception.getMessage());
+        } catch (JwtException | AuthenticationException exception) {
+            log.debug("JWT authentication failed");
             SecurityContextHolder.clearContext();
             sendUnauthorized(request, response, new BadCredentialsException("Invalid JWT token"));
+
+            return;
         }
+
+        filterChain.doFilter(request, response);
     }
 
     private Authentication createAuthentication(Claims claims, HttpServletRequest request) {
         String subject = claims.getSubject();
 
         return switch (claims.get(JwtClaims.TYPE, String.class)) {
-            case JwtClaims.TYPE_USER -> createUserAuthentication(subject, request);
+            case JwtClaims.TYPE_USER -> {
+                tokenRevocationService.checkNotRevoked(claims);
+                yield createUserAuthentication(subject, request);
+            }
             case JwtClaims.TYPE_SERVICE -> createServiceAuthentication(
                     claims,
                     subject,
@@ -95,6 +104,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     private Authentication createUserAuthentication(String subject, HttpServletRequest request) {
         UserDetails userDetails = userDetailsService.loadUserByUsername(subject);
+
+        if (!userDetails.isEnabled()) {
+            throw new DisabledException("User is disabled");
+        }
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 userDetails,

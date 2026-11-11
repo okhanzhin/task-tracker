@@ -1,4 +1,4 @@
-package com.okhanzhin.task.tracker.backend.model.dto;
+package com.okhanzhin.task.tracker.backend.security;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,4 +22,9 @@ public class SecurityUser implements UserDetails {
     private final String password;
     private final List<SimpleGrantedAuthority> authorities;
     private final boolean isActive;
+
+    @Override
+    public boolean isEnabled() {
+        return isActive;
+    }
 }

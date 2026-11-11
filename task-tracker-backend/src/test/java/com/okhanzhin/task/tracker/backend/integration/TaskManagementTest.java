@@ -5,8 +5,8 @@ import com.okhanzhin.task.tracker.backend.model.dto.request.AuthenticationReques
 import com.okhanzhin.task.tracker.backend.model.dto.request.CreateTaskRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.request.UpdateTaskRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.TaskResponse;
-import com.okhanzhin.task.tracker.backend.model.entity.TaskDAO;
-import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
+import com.okhanzhin.task.tracker.backend.model.entity.Task;
+import com.okhanzhin.task.tracker.backend.model.entity.User;
 import com.okhanzhin.task.tracker.backend.utils.TestDataFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -238,7 +238,7 @@ public class TaskManagementTest extends IntegrationTest {
                 .andExpect(jsonPath("$.completed").value(true))
                 .andExpect(jsonPath("$.completedAt").isNotEmpty());
 
-        TaskDAO updatedTask = taskRepository.findById(task.getId()).orElseThrow();
+        Task updatedTask = taskRepository.findById(task.getId()).orElseThrow();
 
         assertEquals(updatedTitle, updatedTask.getTitle());
         assertEquals(updatedDescription, updatedTask.getDescription());
@@ -350,7 +350,7 @@ public class TaskManagementTest extends IntegrationTest {
         assertTrue(taskRepository.existsById(task.getId()));
     }
 
-    private UserDAO createUser(String username, String email, String password) {
+    private User createUser(String username, String email, String password) {
         return TestDataFactory.savedUser(
                 username,
                 email,
@@ -361,7 +361,7 @@ public class TaskManagementTest extends IntegrationTest {
         );
     }
 
-    private TaskDAO createTask(String title, String description, UserDAO user) {
+    private Task createTask(String title, String description, User user) {
         return TestDataFactory.savedTask(
                 title,
                 description,

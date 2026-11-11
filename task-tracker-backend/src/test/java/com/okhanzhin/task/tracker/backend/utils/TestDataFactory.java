@@ -1,8 +1,8 @@
 package com.okhanzhin.task.tracker.backend.utils;
 
 import com.okhanzhin.task.tracker.backend.model.common.Status;
-import com.okhanzhin.task.tracker.backend.model.entity.TaskDAO;
-import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
+import com.okhanzhin.task.tracker.backend.model.entity.Task;
+import com.okhanzhin.task.tracker.backend.model.entity.User;
 import com.okhanzhin.task.tracker.backend.repository.TaskRepository;
 import com.okhanzhin.task.tracker.backend.repository.UserRepository;
 import com.okhanzhin.task.tracker.common.model.report.DailyReportDataPage;
@@ -21,14 +21,14 @@ import java.util.List;
 @UtilityClass
 public class TestDataFactory {
 
-    public static UserDAO user(
+    public static User user(
             String username,
             String email,
             String rawPassword,
             String timezone,
             PasswordEncoder passwordEncoder
     ) {
-        return UserDAO.builder()
+        return User.builder()
                 .username(username)
                 .email(email)
                 .password(passwordEncoder.encode(rawPassword))
@@ -37,7 +37,7 @@ public class TestDataFactory {
                 .build();
     }
 
-    public static UserDAO savedUser(
+    public static User savedUser(
             String username,
             String email,
             String rawPassword,
@@ -45,7 +45,7 @@ public class TestDataFactory {
             UserRepository userRepository,
             PasswordEncoder passwordEncoder
     ) {
-        UserDAO user = user(
+        User user = user(
                 username,
                 email,
                 rawPassword,
@@ -56,11 +56,11 @@ public class TestDataFactory {
         return userRepository.saveAndFlush(user);
     }
 
-    public static TaskDAO savedTask(
+    public static Task savedTask(
             String title,
             String description,
             boolean completed,
-            UserDAO owner,
+            User owner,
             TaskRepository taskRepository
     ) {
         return savedTask(
@@ -72,14 +72,14 @@ public class TestDataFactory {
         );
     }
 
-    public static TaskDAO savedTask(
+    public static Task savedTask(
             String title,
             String description,
             Instant completedAt,
-            UserDAO owner,
+            User owner,
             TaskRepository taskRepository
     ) {
-        TaskDAO task = new TaskDAO();
+        Task task = new Task();
         task.setTitle(title);
         task.setDescription(description);
         task.setOwner(owner);

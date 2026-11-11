@@ -1,8 +1,8 @@
 package com.okhanzhin.task.tracker.backend.service.impl;
 
 import com.okhanzhin.task.tracker.backend.model.common.Status;
-import com.okhanzhin.task.tracker.backend.model.dto.SecurityUser;
-import com.okhanzhin.task.tracker.backend.model.entity.UserDAO;
+import com.okhanzhin.task.tracker.backend.security.SecurityUser;
+import com.okhanzhin.task.tracker.backend.model.entity.User;
 import com.okhanzhin.task.tracker.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserDAO user = userRepository.findByEmail(username).orElseThrow(() ->
+        User user = userRepository.findByEmail(username).orElseThrow(() ->
                 new UsernameNotFoundException(
                         String.format("User '%s' not found", username)
                 ));

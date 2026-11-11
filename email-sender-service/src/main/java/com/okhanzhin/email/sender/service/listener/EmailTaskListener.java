@@ -1,13 +1,16 @@
 package com.okhanzhin.email.sender.service.listener;
 
+import com.okhanzhin.email.sender.service.exception.InvalidEmailTaskException;
 import com.okhanzhin.email.sender.service.mapper.EmailNotificationMapper;
 import com.okhanzhin.email.sender.service.service.EmailSenderService;
-import com.okhanzhin.email.sender.service.utils.EmailSendingTaskValidator;
 import com.okhanzhin.task.tracker.common.model.messaging.mail.EmailSendingTask;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+
+import java.util.stream.Collectors;
 
 /**
  *
@@ -20,14 +23,14 @@ public class EmailTaskListener {
 
     private final EmailSenderService emailSenderService;
     private final EmailNotificationMapper mapper;
-    private final EmailSendingTaskValidator validator;
+    private final Validator validator;
 
     @KafkaListener(
             topics = "${app.kafka.topics.email-sending}",
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void onEmailSendingTask(EmailSendingTask task) {
-        validator.validate(task);
+        validate(task);
 
         log.info(
                 "Received email task: messageId={}, recipientEmail={}, subject={}",
@@ -36,6 +39,33 @@ public class EmailTaskListener {
                 task.getSubject()
         );
 
-        emailSenderService.send(mapper.mapFromEmailSendingTask(task));
+        emailSenderService.send(
+                mapper.mapFromEmailSendingTask(task)
+        );
+    }
+
+    private void validate(EmailSendingTask task) {
+        if (task == null) {
+            throw new InvalidEmailTaskException(
+                    null,
+                    "Email sending task must not be null"
+            );
+        }
+
+        var violations = validator.validate(task);
+
+        if (violations.isEmpty()) {
+            return;
+        }
+
+        String details = violations.stream()
+                .map(violation -> violation.getMessage())
+                .sorted()
+                .collect(Collectors.joining("; "));
+
+        throw new InvalidEmailTaskException(
+                task.getMessageId(),
+                details
+        );
     }
 }

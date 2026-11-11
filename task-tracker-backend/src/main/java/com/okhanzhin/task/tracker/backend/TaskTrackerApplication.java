@@ -1,11 +1,9 @@
 package com.okhanzhin.task.tracker.backend;
 
-import com.okhanzhin.task.tracker.backend.service.JwtService;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  *
@@ -13,15 +11,9 @@ import org.springframework.context.annotation.Bean;
  */
 @SpringBootApplication
 @ConfigurationPropertiesScan
+@EnableScheduling
 public class TaskTrackerApplication {
     public static void main(String[] args) {
         SpringApplication.run(TaskTrackerApplication.class, args);
     }
-
-//    @Bean
-//    CommandLineRunner printSchedulerToken(JwtService jwtService) {
-//        return args -> System.out.println(
-//                "SCHEDULER_SERVICE_TOKEN=" + jwtService.generateSchedulerToken()
-//        );
-//    }
 }

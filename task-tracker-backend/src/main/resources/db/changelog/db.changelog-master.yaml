@@ -38,3 +38,10 @@ databaseChangeLog:
         - sqlFile:
             comment: create tasks owner id index
             path: db/changelog/sql/005-create-tasks-owner-id-index.sql
+  - changeSet:
+      id: 006-create-revoked-tokens-table
+      author: okhanzhin
+      changes:
+        - sqlFile:
+            comment: create revoked tokens table
+            path: db/changelog/sql/006-create-revoked-tokens-table.sql

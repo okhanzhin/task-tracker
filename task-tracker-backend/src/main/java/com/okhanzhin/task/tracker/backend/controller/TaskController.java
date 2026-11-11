@@ -1,6 +1,6 @@
 package com.okhanzhin.task.tracker.backend.controller;
 
-import com.okhanzhin.task.tracker.backend.model.dto.SecurityUser;
+import com.okhanzhin.task.tracker.backend.security.SecurityUser;
 import com.okhanzhin.task.tracker.backend.model.dto.request.CreateTaskRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.request.UpdateTaskRequest;
 import com.okhanzhin.task.tracker.backend.model.dto.response.TaskResponse;
