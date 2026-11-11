@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -74,19 +73,11 @@ public class ReportEmailMapper {
         }
 
         return EmailSendingTask.builder()
-                .messageId(createMessageId(request.getRequestId()))
+                .messageId(UUID.randomUUID())
                 .recipientEmail(request.getUserEmail())
                 .subject(createSubject(request))
                 .body(summary)
                 .build();
-    }
-
-    private UUID createMessageId(String requestId) {
-        String source = "daily-report-email:" + requestId;
-
-        return UUID.nameUUIDFromBytes(
-                source.getBytes(StandardCharsets.UTF_8)
-        );
     }
 
     private String createSubject(SummarizationRequest request) {
