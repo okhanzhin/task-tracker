@@ -45,3 +45,10 @@ databaseChangeLog:
         - sqlFile:
             comment: create revoked tokens table
             path: db/changelog/sql/006-create-revoked-tokens-table.sql
+  - changeSet:
+      id: 007-move-revoked-tokens-table
+      author: okhanzhin
+      changes:
+        - sqlFile:
+            comment: move revoked tokens table to the application schema
+            path: db/changelog/sql/007-move-revoked-tokens-table.sql

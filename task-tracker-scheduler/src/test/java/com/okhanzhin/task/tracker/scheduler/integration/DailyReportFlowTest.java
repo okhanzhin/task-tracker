@@ -7,6 +7,7 @@ import com.okhanzhin.task.tracker.scheduler.mapper.ReportEmailMapper;
 import com.okhanzhin.task.tracker.scheduler.producer.EmailTaskProducer;
 import com.okhanzhin.task.tracker.scheduler.service.DailyReportJob;
 import com.okhanzhin.task.tracker.scheduler.service.DailyReportRequestSource;
+import com.okhanzhin.task.tracker.scheduler.service.FallbackReportBuilder;
 import com.okhanzhin.task.tracker.scheduler.service.UserReportDeliveryService;
 import com.okhanzhin.task.tracker.scheduler.service.UserReportService;
 import com.okhanzhin.task.tracker.scheduler.service.impl.UserReportDeliveryServiceImpl;
@@ -20,16 +21,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -54,6 +55,21 @@ class DailyReportFlowTest {
 
     private static final String EMAIL_TOPIC =
             "EMAIL_SENDING_TASKS";
+
+    private static final String EXPECTED_SUBJECT =
+            "Task report for period "
+                    + "15.10.2026 00:00 to 16.10.2026 00:00 (UTC)";
+
+    private static final String EXPECTED_EMPTY_FALLBACK =
+            "Daily task report\n\n"
+                    + "Completed tasks: 0\n"
+                    + "No tasks.\n"
+                    + "\n"
+                    + "Pending tasks: 0\n"
+                    + "No tasks.\n"
+                    + "\n"
+                    + "AI-generated analysis is temporarily unavailable. "
+                    + "This report was generated directly from your task data.\n";
 
     @Mock
     private DailyReportRequestSource requestSource;
@@ -87,7 +103,8 @@ class DailyReportFlowTest {
                 new UserReportDeliveryServiceImpl(
                         userReportService,
                         emailMapper,
-                        emailProducer
+                        emailProducer,
+                        new FallbackReportBuilder()
                 );
 
         job = new DailyReportJob(
@@ -128,26 +145,7 @@ class DailyReportFlowTest {
 
         EmailSendingTask email = emailCaptor.getValue();
 
-        assertEquals(
-                request.getUserEmail(),
-                email.getRecipientEmail()
-        );
-        assertEquals(
-                "Task report for period "
-                        + "15.10.2026 00:00 to 16.10.2026 00:00 (UTC)",
-                email.getSubject()
-        );
-        assertEquals(summary, email.getBody());
-
-        UUID expectedMessageId = UUID.nameUUIDFromBytes(
-                ("daily-report-email:" + request.getRequestId())
-                        .getBytes(StandardCharsets.UTF_8)
-        );
-
-        assertEquals(
-                expectedMessageId,
-                email.getMessageId()
-        );
+        assertEmail(email, request, summary);
 
         verify(requestSource).forEach(
                 eq(FROM),
@@ -158,7 +156,7 @@ class DailyReportFlowTest {
     }
 
     @Test
-    void shouldContinueAfterGenerationFailure() {
+    void shouldPublishFallbackAndContinueAfterGenerationFailure() {
         SummarizationRequest firstRequest = createRequest(1L);
         SummarizationRequest secondRequest = createRequest(2L);
 
@@ -182,6 +180,12 @@ class DailyReportFlowTest {
 
         when(kafkaTemplate.send(
                 eq(EMAIL_TOPIC),
+                eq(firstRequest.getUserEmail()),
+                any(EmailSendingTask.class)
+        )).thenReturn(successfulPublication());
+
+        when(kafkaTemplate.send(
+                eq(EMAIL_TOPIC),
                 eq(secondRequest.getUserEmail()),
                 any(EmailSendingTask.class)
         )).thenReturn(successfulPublication());
@@ -191,21 +195,30 @@ class DailyReportFlowTest {
         ArgumentCaptor<EmailSendingTask> emailCaptor =
                 ArgumentCaptor.forClass(EmailSendingTask.class);
 
-        verify(kafkaTemplate, times(1)).send(
+        verify(kafkaTemplate, times(2)).send(
                 eq(EMAIL_TOPIC),
                 any(String.class),
                 emailCaptor.capture()
         );
 
-        EmailSendingTask email = emailCaptor.getValue();
+        List<EmailSendingTask> emails =
+                emailCaptor.getAllValues();
 
-        assertEquals(
-                secondRequest.getUserEmail(),
-                email.getRecipientEmail()
+        assertEmail(
+                emails.get(0),
+                firstRequest,
+                EXPECTED_EMPTY_FALLBACK
         );
-        assertEquals(
-                "Second user report",
-                email.getBody()
+
+        assertEmail(
+                emails.get(1),
+                secondRequest,
+                "Second user report"
+        );
+
+        assertNotEquals(
+                emails.get(0).getMessageId(),
+                emails.get(1).getMessageId()
         );
 
         verify(userReportService).generate(firstRequest);
@@ -265,23 +278,39 @@ class DailyReportFlowTest {
         List<EmailSendingTask> emails =
                 emailCaptor.getAllValues();
 
-        assertEquals(
-                firstRequest.getUserEmail(),
-                emails.get(0).getRecipientEmail()
-        );
-        assertEquals(
-                "First user report",
-                emails.get(0).getBody()
+        assertEmail(
+                emails.get(0),
+                firstRequest,
+                "First user report"
         );
 
-        assertEquals(
-                secondRequest.getUserEmail(),
-                emails.get(1).getRecipientEmail()
+        assertEmail(
+                emails.get(1),
+                secondRequest,
+                "Second user report"
         );
-        assertEquals(
-                "Second user report",
-                emails.get(1).getBody()
+
+        assertNotEquals(
+                emails.get(0).getMessageId(),
+                emails.get(1).getMessageId()
         );
+
+        verify(userReportService).generate(firstRequest);
+        verify(userReportService).generate(secondRequest);
+    }
+
+    private void assertEmail(
+            EmailSendingTask email,
+            SummarizationRequest request,
+            String expectedBody
+    ) {
+        assertEquals(
+                request.getUserEmail(),
+                email.getRecipientEmail()
+        );
+        assertEquals(EXPECTED_SUBJECT, email.getSubject());
+        assertEquals(expectedBody, email.getBody());
+        assertNotNull(email.getMessageId());
     }
 
     private void provideRequests(
@@ -320,6 +349,7 @@ class DailyReportFlowTest {
                         LocalDateTime.parse("2026-10-16T00:00:00")
                 )
                 .replyTopic("SUMMARIZATION_RESPONSES")
+                .tasks(List.of())
                 .build();
     }
 }
