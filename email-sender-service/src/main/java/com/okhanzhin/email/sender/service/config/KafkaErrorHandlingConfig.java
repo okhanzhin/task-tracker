@@ -26,7 +26,7 @@ public class KafkaErrorHandlingConfig {
     private final AppKafkaProperties appKafkaProperties;
 
     @Bean
-    public DefaultErrorHandler kafkaErrorHandler(KafkaTemplate<String, EmailSendingTask> kafkaTemplate) {
+    public DefaultErrorHandler kafkaErrorHandler(KafkaTemplate<String, Object> kafkaTemplate) {
         DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(
                 kafkaTemplate,
                 (record, exception) -> {
