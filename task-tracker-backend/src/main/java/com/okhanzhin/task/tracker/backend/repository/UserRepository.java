@@ -29,7 +29,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             where (:afterUserId is null or user.id > :afterUserId)
                 and exists(
                     select task.id
-                    from TaskDAO task
+                    from Task task
                     where task.owner.id = user.id
                         and (
                             task.completed = false
